@@ -11,11 +11,12 @@ open Elmish.Browser.Navigation
 open Fable.Import
 open Shared
 open Pages
+open Client.Sha256
 
 /// The composed model for the different possible page states of the application
 type PageModel =
     | HomePageModel
-    | Sha256Model
+    | Sha256Model of Sha256.Model
 
 type Model = 
   { 
@@ -23,9 +24,7 @@ type Model =
     PageModel: PageModel }
 
 type Msg =
-| Increment
-| Decrement
-| Init of Result<Counter, exn>
+| Sha256Msg of Sha256.Msg
 
 
 // The navigation logic of the application given a page identity parsed from the .../#info  / information in the URL.
@@ -35,7 +34,7 @@ let urlUpdate (result:Page option) model =
         Browser.console.error("Error parsing url: " + Browser.window.location.href)
         ( model, Navigation.modifyUrl (toHash Page.Home) )
     | Some Page.Sha256 ->
-        { model with PageModel = Sha256Model }, Cmd.none
+        { model with PageModel = Sha256Model Sha256.init }, Cmd.map Sha256Msg Cmd.none
     | Some Page.Home ->
         { model with PageModel = HomePageModel }, Cmd.none
 
@@ -52,15 +51,12 @@ let init result =
   //     (Error >> Init)
   // model, cmd
 
-let update msg (model : Model) =
-  // let model' =
-  //   match msg with
-  //   | Some x, Increment -> Some (x + 1)
-  //   | Some x, Decrement -> Some (x - 1)
-  //   | None, Init (Ok x) -> Some x
-  //   | _ -> None
-  // model', Cmd.none
-  model, Cmd.none
+let update msg (model : Model): Model*Cmd<Msg> =
+    match msg, model.PageModel with
+    | Sha256Msg msg, Sha256Model m ->
+      let m, cmd = Sha256.update msg m
+      { model with PageModel = Sha256Model m }, Cmd.none
+    | _ -> model, Cmd.none
 
 let safeComponents =
   let intersperse sep ls =
@@ -83,14 +79,11 @@ let safeComponents =
       str " powered by: "
       components ]
 
-
-open Fable.Helpers.React
-open Fable.Helpers.React.Props
 /// Constructs the view for a page given the model and dispatcher.
 let viewPage model dispatch =
     match model.PageModel with
     | HomePageModel -> Home.view ()
-    | Sha256Model  -> Sha256.view ()
+    | Sha256Model m -> Sha256.view m (Sha256Msg >> dispatch)
 
 let show = function
 | Some x -> string x

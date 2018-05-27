@@ -1,10 +1,12 @@
 source https://www.nuget.org/api/v2
+nuget Newtonsoft.Json
 
 group Server
   source https://api.nuget.org/v3/index.json
 
   nuget FSharp.Core
   nuget Suave
+  nuget Newtonsoft.Json
 
   clitool Microsoft.DotNet.Watcher.Tools
 
