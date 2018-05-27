@@ -5,6 +5,7 @@ open Suave
 open Suave.Operators
 open Suave.Filters
 open Suave.Successful
+open Suave.Writers
 open Suave.RequestErrors
 open Newtonsoft.Json
 open Newtonsoft.Json.Serialization
@@ -46,28 +47,48 @@ let getResourceFromReq<'a> (req : HttpRequest) =
     System.Text.Encoding.UTF8.GetString(rawForm)
   req.rawForm |> getString |> fromJson<'a>
 
+let hashedMessageHexadecimal (message: string) = 
+    use sha256 = System.Security.Cryptography.SHA256.Create()
+    message
+    |> System.Text.Encoding.UTF8.GetBytes
+    |> sha256.ComputeHash
+    |> Seq.map (fun c -> c.ToString("X2"))
+    |> Seq.reduce (+)
+
+type Message = {
+  Value: string;
+  ErrorMsg: string;
+}
+
 let sha256 : WebPart =
   choose [ 
     GET >=> 
     request (fun request ->
         match request.queryParam "message" with
         | Choice1Of2 message -> 
-                  use sha256 = System.Security.Cryptography.SHA256.Create()
-                  let hashedMessageHexadecimal = 
-                    message 
-                    |> System.Text.Encoding.UTF8.GetBytes
-                    |> sha256.ComputeHash
-                    |> Seq.map (fun c -> c.ToString("X2"))
-                    |> Seq.reduce (+)
-                  OK (sprintf "Hashed Message: %s" hashedMessageHexadecimal)
+                  OK (sprintf "Hashed Message: %s" (hashedMessageHexadecimal message))
         | Choice2Of2 errorMessage -> BAD_REQUEST errorMessage)
     POST >=> 
-    request (getResourceFromReq >> JSON)  
+    request (getResourceFromReq<Message> >> (fun message -> hashedMessageHexadecimal message.Value) >> JSON)  
   ]       
+
+let setCORSHeaders =
+    setHeader  "Access-Control-Allow-Origin" "*"
+    >=> setHeader "Access-Control-Allow-Headers" "content-type"
+
+let allow_cors : WebPart =
+    choose [
+        OPTIONS >=>
+            fun context ->
+                context |> (
+                    setCORSHeaders
+                    >=> OK "CORS approved" )
+    ]
 
 
 let webPart =
   choose [
+    allow_cors
     init
     path "/" >=> Files.browseFileHome "index.html"
     sha256

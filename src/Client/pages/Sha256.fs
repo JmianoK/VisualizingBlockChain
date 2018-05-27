@@ -8,21 +8,19 @@ open Fable.Helpers.React.Props
 open Fable.Core.JsInterop
 open Fable.PowerPack.Fetch.Fetch_types
 
-
 type Model = {
   Value: string;
   ErrorMsg: string;
 } 
 
 type Msg =
+    | GetHash
     | TextChanged of string
     | Success of Model
     | Error of exn
 
 let getHash (model: Model) = 
-  printfn "IM SO LONELY"
   promise {
-    printfn "BLAH BLA"
     let body = toJson model
     let props =
       [
@@ -36,23 +34,22 @@ let getHash (model: Model) =
       return! failwithf "Error"        
   }
 
-let getHashCmd value = 
-  printfn "WTF"
-  Cmd.ofPromise getHash value Success Error
+let getHashCmd value = Cmd.ofPromise getHash value Success Error
+
 
 let update (msg: Msg) model : Model*Cmd<Msg> = 
   printfn "CALLING UPDATE!!!!"
   printfn "%A" msg
   match msg with
   | TextChanged value -> 
-    printf "COMON"
-    let p = getHashCmd model 
-    printfn "RETURN"
-    printfn "%A" p
-    { model with Value = value }, p
-  | Success model ->
+    { model with Value = value }, Cmd.none
+  | GetHash ->
+    model, getHashCmd model 
+  | Success model -> 
+    printfn "==== SUCCESSSSSSS"
     { model with Value = model.Value }, Cmd.none
   | Error err ->
+    printfn "==== ERROR"
     { model with ErrorMsg = err.Message }, Cmd.none
 
 
@@ -60,7 +57,13 @@ let view (model: Model) (dispatch: Msg -> unit) =
     [ div [ ]
         [ input [ Placeholder "Enter text to hash" 
                   Value model.Value
-                  OnChange (fun (ev:React.FormEvent) -> dispatch (TextChanged !!ev.target?value)) ] ] ]
+                  OnChange (fun (ev:React.FormEvent) -> dispatch (TextChanged !!ev.target?value)) ] ]
+      div [ ]
+        [
+                button [ OnClick (fun _ -> dispatch GetHash) ] 
+                       [ str "Get Hash" ]
+        ]                                   
+    ]                 
 
 let init  =
   { 

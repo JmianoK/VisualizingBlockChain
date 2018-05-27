@@ -20,8 +20,8 @@ type PageModel =
 
 type Model = 
   { 
-    // Counter: Counter option
-    PageModel: PageModel }
+    PageModel: PageModel 
+  }
 
 type Msg =
 | Sha256Msg of Sha256.Msg
@@ -55,7 +55,8 @@ let update msg (model : Model): Model*Cmd<Msg> =
     match msg, model.PageModel with
     | Sha256Msg msg, Sha256Model m ->
       let m, cmd = Sha256.update msg m
-      { model with PageModel = Sha256Model m }, Cmd.none
+      // { model with PageModel = Sha256Model m }, Cmd.none // If we do this then promises are not called propagately
+      { model with PageModel = Sha256Model m }, Cmd.map Sha256Msg cmd
     | _ -> model, Cmd.none
 
 let safeComponents =
@@ -85,20 +86,10 @@ let viewPage model dispatch =
     | HomePageModel -> Home.view ()
     | Sha256Model m -> Sha256.view m (Sha256Msg >> dispatch)
 
-let show = function
-| Some x -> string x
-| None -> "Loading..."
-
 let view model dispatch =
   div []
-    [ h1 [] [ str "SAFE Template" ]
-      p  [] [ str "The initial counter is fetched from server" ]
-      p  [] [ str "Press buttons to manipulate counter:" ]
-      // button [ OnClick (fun _ -> dispatch Decrement) ] [ str "-" ]
-      // div [] [ str (show model) ]
-      // button [ OnClick (fun _ -> dispatch Increment) ] [ str "+" ]
+    [ 
       div [] (viewPage model dispatch)
-      // safeComponents ]
     ]
   
 #if DEBUG
