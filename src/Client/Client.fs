@@ -1,17 +1,26 @@
-module Client
+module Client.App
 
 open Elmish
 open Elmish.React
 
+open Fable.Import.Browser
 open Fable.Helpers.React
 open Fable.Helpers.React.Props
 open Fable.PowerPack.Fetch
-
+open Elmish.Browser.Navigation
+open Fable.Import
 open Shared
+open Pages
 
+/// The composed model for the different possible page states of the application
+type PageModel =
+    | HomePageModel
+    | Sha256Model
 
-
-type Model = Counter option
+type Model = 
+  { 
+    // Counter: Counter option
+    PageModel: PageModel }
 
 type Msg =
 | Increment
@@ -19,25 +28,39 @@ type Msg =
 | Init of Result<Counter, exn>
 
 
+// The navigation logic of the application given a page identity parsed from the .../#info  / information in the URL.
+let urlUpdate (result:Page option) model =
+    match result with
+    | None ->
+        Browser.console.error("Error parsing url: " + Browser.window.location.href)
+        ( model, Navigation.modifyUrl (toHash Page.Home) )
+    | Some Page.Sha256 ->
+        { model with PageModel = Sha256Model }, Cmd.none
+    | Some Page.Home ->
+        { model with PageModel = HomePageModel }, Cmd.none
 
-let init () = 
-  let model = None
-  let cmd =
-    Cmd.ofPromise 
-      (fetchAs<int> "/api/init") 
-      [] 
-      (Ok >> Init) 
-      (Error >> Init)
-  model, cmd
+
+let init result = 
+  let model = 
+    { PageModel = HomePageModel }
+  urlUpdate result model
+  // let cmd =
+  //   Cmd.ofPromise 
+  //     (fetchAs<int> "/api/init") 
+  //     [] 
+  //     (Ok >> Init) 
+  //     (Error >> Init)
+  // model, cmd
 
 let update msg (model : Model) =
-  let model' =
-    match model,  msg with
-    | Some x, Increment -> Some (x + 1)
-    | Some x, Decrement -> Some (x - 1)
-    | None, Init (Ok x) -> Some x
-    | _ -> None
-  model', Cmd.none
+  // let model' =
+  //   match msg with
+  //   | Some x, Increment -> Some (x + 1)
+  //   | Some x, Decrement -> Some (x - 1)
+  //   | None, Init (Ok x) -> Some x
+  //   | _ -> None
+  // model', Cmd.none
+  model, Cmd.none
 
 let safeComponents =
   let intersperse sep ls =
@@ -60,6 +83,15 @@ let safeComponents =
       str " powered by: "
       components ]
 
+
+open Fable.Helpers.React
+open Fable.Helpers.React.Props
+/// Constructs the view for a page given the model and dispatcher.
+let viewPage model dispatch =
+    match model.PageModel with
+    | HomePageModel -> Home.view ()
+    | Sha256Model  -> Sha256.view ()
+
 let show = function
 | Some x -> string x
 | None -> "Loading..."
@@ -69,11 +101,12 @@ let view model dispatch =
     [ h1 [] [ str "SAFE Template" ]
       p  [] [ str "The initial counter is fetched from server" ]
       p  [] [ str "Press buttons to manipulate counter:" ]
-      button [ OnClick (fun _ -> dispatch Decrement) ] [ str "-" ]
-      div [] [ str (show model) ]
-      button [ OnClick (fun _ -> dispatch Increment) ] [ str "+" ]
-      safeComponents ]
-
+      // button [ OnClick (fun _ -> dispatch Decrement) ] [ str "-" ]
+      // div [] [ str (show model) ]
+      // button [ OnClick (fun _ -> dispatch Increment) ] [ str "+" ]
+      div [] (viewPage model dispatch)
+      // safeComponents ]
+    ]
   
 #if DEBUG
 open Elmish.Debug
@@ -81,6 +114,7 @@ open Elmish.HMR
 #endif
 
 Program.mkProgram init update view
+|> Program.toNavigable Pages.urlParser urlUpdate
 #if DEBUG
 |> Program.withConsoleTrace
 |> Program.withHMR

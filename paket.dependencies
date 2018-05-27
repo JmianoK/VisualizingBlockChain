@@ -1,3 +1,5 @@
+source https://www.nuget.org/api/v2
+
 group Server
   source https://api.nuget.org/v3/index.json
 
@@ -13,6 +15,7 @@ group Client
   nuget Fable.Elmish.Debugger
   nuget Fable.Elmish.React
   nuget Fable.Elmish.HMR
+  nuget Fable.Elmish.Browser
 
   clitool dotnet-fable
 
