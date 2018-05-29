@@ -33,7 +33,7 @@ let init : WebPart =
 
 let JSON v =     
     let jsonSerializerSettings = new JsonSerializerSettings()
-    jsonSerializerSettings.ContractResolver <- new CamelCasePropertyNamesContractResolver()
+    // jsonSerializerSettings.ContractResolver <- new CamelCasePropertyNamesContractResolver()
 
     JsonConvert.SerializeObject(v, jsonSerializerSettings)
     |> OK 
@@ -60,17 +60,9 @@ type Message = {
   ErrorMsg: string;
 }
 
-let sha256 : WebPart =
-  choose [ 
-    GET >=> 
-    request (fun request ->
-        match request.queryParam "message" with
-        | Choice1Of2 message -> 
-                  OK (sprintf "Hashed Message: %s" (hashedMessageHexadecimal message))
-        | Choice2Of2 errorMessage -> BAD_REQUEST errorMessage)
-    POST >=> 
-    request (getResourceFromReq<Message> >> (fun message -> hashedMessageHexadecimal message.Value) >> JSON)  
-  ]       
+type HashedValue = { 
+  HashedValue: string;
+}
 
 let setCORSHeaders =
     setHeader  "Access-Control-Allow-Origin" "*"
@@ -84,6 +76,21 @@ let allow_cors : WebPart =
                     setCORSHeaders
                     >=> OK "CORS approved" )
     ]
+
+let sha256 : WebPart =
+  choose [ 
+    GET >=> 
+    request (fun request ->
+        match request.queryParam "message" with
+        | Choice1Of2 message -> 
+                  OK (sprintf "Hashed Message: %s" (hashedMessageHexadecimal message))
+        | Choice2Of2 errorMessage -> BAD_REQUEST errorMessage)
+    POST >=>       
+            fun context ->
+                context |> (
+                    setCORSHeaders
+                    >=> request (getResourceFromReq<Message> >> (fun message -> hashedMessageHexadecimal message.Value) >> (fun hashedValue -> { HashedValue = hashedValue} ) >> JSON))
+  ]       
 
 
 let webPart =

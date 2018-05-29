@@ -8,15 +8,18 @@ open Fable.Helpers.React.Props
 open Fable.Core.JsInterop
 open Fable.PowerPack.Fetch.Fetch_types
 
+type HashValue = { HashedValue: string }
+
 type Model = {
   Value: string;
   ErrorMsg: string;
+  HashValue: HashValue option;
 } 
 
 type Msg =
     | GetHash
     | TextChanged of string
-    | Success of Model
+    | Success of HashValue
     | Error of exn
 
 let getHash (model: Model) = 
@@ -29,7 +32,7 @@ let getHash (model: Model) =
         RequestProperties.Body !^body
       ]
     try
-      return! Fetch.fetchAs<Model> "http://localhost:8085/sha256" props
+      return! Fetch.fetchAs<HashValue> "http://localhost:8085/sha256" props
     with _ ->
       return! failwithf "Error"        
   }
@@ -42,12 +45,13 @@ let update (msg: Msg) model : Model*Cmd<Msg> =
   printfn "%A" msg
   match msg with
   | TextChanged value -> 
-    { model with Value = value }, Cmd.none
+    { model with Value = value }, getHashCmd model
   | GetHash ->
     model, getHashCmd model 
-  | Success model -> 
+  | Success hashedValue -> 
     printfn "==== SUCCESSSSSSS"
-    { model with Value = model.Value }, Cmd.none
+    printfn "HASHED VALUE: %A" hashedValue
+    { model with HashValue = Some { HashedValue = hashedValue.HashedValue } }, Cmd.none
   | Error err ->
     printfn "==== ERROR"
     { model with ErrorMsg = err.Message }, Cmd.none
@@ -62,11 +66,14 @@ let view (model: Model) (dispatch: Msg -> unit) =
         [
                 button [ OnClick (fun _ -> dispatch GetHash) ] 
                        [ str "Get Hash" ]
-        ]                                   
+        ]   
+      div [ ]
+        [ input [ Value model.HashValue.Value.HashedValue] ]
     ]                 
 
 let init  =
   { 
     Value = ""
     ErrorMsg = ""
+    HashValue = Some { HashedValue = ""}
   }
