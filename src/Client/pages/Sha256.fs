@@ -7,6 +7,7 @@ open Fable.Helpers.React
 open Fable.Helpers.React.Props
 open Fable.Core.JsInterop
 open Fable.PowerPack.Fetch.Fetch_types
+open Client.Styles
 
 type HashValue = { HashedValue: string }
 
@@ -57,21 +58,23 @@ let update (msg: Msg) model : Model*Cmd<Msg> =
     { model with ErrorMsg = err.Message }, Cmd.none
 
 let view (model: Model) (dispatch: Msg -> unit) =
-    [ div [ ]
-        [ textarea [ 
+    [ div [ centerStyle "Row" ]
+        [ span [ ]
+            [ str "Data:" ]
+          textarea [ 
                   Placeholder "Enter text to hash" 
                   Cols 50.
                   Rows 20.                                    
                   Value model.Value
-                  OnChange (fun (ev:React.FormEvent) -> dispatch (TextChanged !!ev.target?value)) ] [ ] ] 
-      div [ ]
-        [
-                button [ OnClick (fun _ -> dispatch GetHash) ] 
-                       [ str "Get Hash" ]
-        ]   
-      div [ ]
-        [ input [ Value model.HashValue.Value.HashedValue
-                  ReadOnly true ] ]
+                  OnChange (fun (ev:React.FormEvent) -> dispatch (TextChanged !!ev.target?value))
+                  Style [ Width !!"100%" ]
+        ] [ ] ] 
+      div [ centerStyle "Row" ]
+        [ span [ ]
+            [ str "Hash:" ]
+          input [ Value model.HashValue.Value.HashedValue
+                  ReadOnly true
+                  Style [ Width !!"100%" ] ] ]
     ]                 
 
 let init  =
