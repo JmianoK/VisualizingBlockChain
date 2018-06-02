@@ -9,9 +9,7 @@ open Fable.Helpers.React.Props
 open Fable.PowerPack.Fetch
 open Elmish.Browser.Navigation
 open Fable.Import
-open Shared
 open Pages
-open Client.Sha256
 
 /// The composed model for the different possible page states of the application
 type PageModel =
@@ -89,9 +87,10 @@ let viewPage model dispatch =
 let view model dispatch =
   div []
     [ 
+      Menu.view
       div [] (viewPage model dispatch)
     ]
-  
+    
 #if DEBUG
 open Elmish.Debug
 open Elmish.HMR

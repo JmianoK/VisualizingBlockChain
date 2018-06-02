@@ -56,19 +56,22 @@ let update (msg: Msg) model : Model*Cmd<Msg> =
     printfn "==== ERROR"
     { model with ErrorMsg = err.Message }, Cmd.none
 
-
 let view (model: Model) (dispatch: Msg -> unit) =
     [ div [ ]
-        [ input [ Placeholder "Enter text to hash" 
+        [ textarea [ 
+                  Placeholder "Enter text to hash" 
+                  Cols 50.
+                  Rows 20.                                    
                   Value model.Value
-                  OnChange (fun (ev:React.FormEvent) -> dispatch (TextChanged !!ev.target?value)) ] ]
+                  OnChange (fun (ev:React.FormEvent) -> dispatch (TextChanged !!ev.target?value)) ] [ ] ] 
       div [ ]
         [
                 button [ OnClick (fun _ -> dispatch GetHash) ] 
                        [ str "Get Hash" ]
         ]   
       div [ ]
-        [ input [ Value model.HashValue.Value.HashedValue] ]
+        [ input [ Value model.HashValue.Value.HashedValue
+                  ReadOnly true ] ]
     ]                 
 
 let init  =

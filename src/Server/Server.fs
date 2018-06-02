@@ -30,7 +30,7 @@ let init : WebPart =
       return! Successful.OK (string counter) ctx
     }
 
-
+ 
 let JSON v =     
     let jsonSerializerSettings = new JsonSerializerSettings()
     // jsonSerializerSettings.ContractResolver <- new CamelCasePropertyNamesContractResolver()
@@ -38,7 +38,7 @@ let JSON v =
     JsonConvert.SerializeObject(v, jsonSerializerSettings)
     |> OK 
     >=> Writers.setMimeType "application/json; charset=utf-8"  
-
+ 
 let fromJson<'a> json =
   JsonConvert.DeserializeObject(json, typeof<'a>) :?> 'a
 
