@@ -7,8 +7,17 @@ open Elmish
 open Fable.Core.JsInterop
 open Client.Styles
 open Shared
-open Fable
-open Client.Api
+
+let difficulty = 4
+let maximumNonce = 500000
+
+let rec generatePatternToFind valueToRepeat numberOfTimes =
+    match numberOfTimes with
+    | _ when numberOfTimes <= 0 -> ""
+    | _ -> valueToRepeat + (generatePatternToFind valueToRepeat (numberOfTimes - 1))
+
+
+let pattern = generatePatternToFind "0" difficulty
 
 type Model = {
   Block: string;
@@ -21,8 +30,17 @@ type Model = {
 type Msg =
     | TextChanged of ValueToHash
     | NonceChanged of string
+    | Mine of bool
     | Success of HashValue
+    | GetHashMine of HashValue
     | Error of exn
+
+let (|Prefix|_|) (p:string) (s:string) =
+    if s.StartsWith(p) then
+        Some(s)
+    else
+        None
+
 
 let update (msg: Msg) model : Model*Cmd<Msg> = 
   match msg with
@@ -30,6 +48,16 @@ let update (msg: Msg) model : Model*Cmd<Msg> =
     { model with Text = valueToHash }, Api.getHashCmd valueToHash Success Error
   | NonceChanged value -> 
     { model with Nonce = value }, Cmd.none
+  | Mine isFound ->
+    match isFound with
+    | true -> model, Cmd.none
+    | false -> 
+        model, Api.getHashCmd { Value = model.Block + model.Nonce + model.Text.Value } GetHashMine Error
+  | GetHashMine hashedValue -> 
+    match hashedValue.HashedValue with
+    | Prefix pattern _ -> { model with HashValue = Some { HashedValue = hashedValue.HashedValue } }, Cmd.none
+    | _ -> 
+        { model with HashValue = Some { HashedValue = hashedValue.HashedValue }; Nonce = ((model.Nonce |> int) + 1).ToString() }, Cmd.ofMsg(Mine false)
   | Success hashedValue -> 
     { model with HashValue = Some { HashedValue = hashedValue.HashedValue } }, Cmd.none
   | Error err ->
@@ -66,12 +94,15 @@ let view (model: Model) (dispatch: Msg -> unit) =
           input [ Value (getHashValue model.HashValue)
                   ReadOnly true
                   Style [ Width !!"100%" ] ] ]
+      div [ centerStyle "Row" ]
+        [ button [ OnClick (fun _ -> dispatch (Mine false)) ]
+        [ str "Mine" ] ]              
     ]                 
 
 
 let init = {
     Block = "1"
-    Nonce = ""
+    Nonce = "0"
     Text = { Value = "" }
     ErrorMsg = None
     HashValue = None
