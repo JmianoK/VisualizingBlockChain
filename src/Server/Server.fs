@@ -69,17 +69,24 @@ let allow_cors : WebPart =
 
 let sha256 : WebPart =
   choose [ 
-    GET >=> 
-    request (fun request ->
-        match request.queryParam "message" with
-        | Choice1Of2 message -> 
-                  OK (sprintf "Hashed Message: %s" (hashedMessageHexadecimal message))
-        | Choice2Of2 errorMessage -> BAD_REQUEST errorMessage)
-    POST >=>       
-            fun context ->
-                context |> (
-                    setCORSHeaders
-                    >=> request (getResourceFromReq<ValueToHash> >> (fun message -> hashedMessageHexadecimal message.Value) >> (fun hashedValue -> { HashedValue = hashedValue} ) >> JSON))
+    path "/sha256" >=> 
+      GET >=> 
+      request (fun request ->
+          match request.queryParam "message" with
+          | Choice1Of2 message -> 
+                    OK (sprintf "Hashed Message: %s" (hashedMessageHexadecimal message))
+          | Choice2Of2 errorMessage -> BAD_REQUEST errorMessage)
+      POST >=>       
+              fun context ->
+                  context |> (
+                      setCORSHeaders
+                      >=> request (getResourceFromReq<ValueToHash> >> (fun message -> hashedMessageHexadecimal message.Value) >> (fun hashedValue -> { HashedValue = hashedValue} ) >> JSON))
+  ]
+
+let mine: WebPart =
+  choose [
+    GET >=> choose
+     [ path "/mine" >=> OK (sprintf "Hello World") ]
   ]       
 
 
@@ -89,6 +96,7 @@ let webPart =
     // init
     path "/" >=> Files.browseFileHome "index.html"
     sha256
+    mine
     Files.browseHome
     RequestErrors.NOT_FOUND "Not found!"
   ]
