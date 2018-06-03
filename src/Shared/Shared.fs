@@ -29,7 +29,13 @@ let (|Prefix|_|) (startsWith:string) (value:string) =
         Some(value)
     else
         None
-let (|LessThan|_|) k value = if value < k then Some() else None
+
+let (|FoundHash|_|) (startsWith:string) (value:string,_) =
+    match value with
+    | Prefix startsWith value-> Some(value)
+    | _ ->  None
+let (|LessThan|_|) k (_,value) = if value < k then Some() else None
+
 let (|MoreThan|_|) k value = if value > k then Some() else None    
 
 let getHashValue (hashValue: HashValue option) = 
