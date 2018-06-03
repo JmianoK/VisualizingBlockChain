@@ -92,7 +92,7 @@ let rec mineWorker block nonce originalMessage =
   let valueToHash = block.ToString() + nonce.ToString() + originalMessage
   let hashed = (hashedMessageHexadecimal valueToHash)
   match hashed with
-    | Prefix "000000" hashed -> { HashedValue = hashed; Block = block.ToString(); Nonce = nonce.ToString() }
+    | Prefix "0000" hashed -> { HashedValue = hashed; Block = block.ToString(); Nonce = nonce.ToString() }
     | _ -> 
       match nonce with
       | LessThan maximumNonce -> mineWorker block (nonce + 1) originalMessage

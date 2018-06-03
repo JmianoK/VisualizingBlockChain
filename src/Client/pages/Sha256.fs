@@ -22,7 +22,7 @@ type Msg =
 let update (msg: Msg) model: Model * Cmd<Msg> = 
   match msg with
   | TextChanged valueToHash -> 
-    { model with Text = valueToHash }, Api.getHashCmd valueToHash Success Error
+    { model with Text = valueToHash }, Api.getCmd Api.getHash valueToHash Success Error
   | Success msg -> 
     { model with HashValue = Some { HashedValue = msg.HashedValue } }, Cmd.none
   | Error err ->
