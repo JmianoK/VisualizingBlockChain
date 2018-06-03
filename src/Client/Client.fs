@@ -15,6 +15,7 @@ open Pages
 type PageModel =
     | HomePageModel
     | Sha256Model of Sha256.Model
+    | BlockPageModel of Block.Model
 
 type Model = 
   { 
@@ -23,6 +24,7 @@ type Model =
 
 type Msg =
 | Sha256Msg of Sha256.Msg
+| BlockMsg of Block.Msg
 
 
 // The navigation logic of the application given a page identity parsed from the .../#info  / information in the URL.
@@ -35,6 +37,8 @@ let urlUpdate (result:Page option) model =
         { model with PageModel = Sha256Model Sha256.init }, Cmd.map Sha256Msg Cmd.none
     | Some Page.Home ->
         { model with PageModel = HomePageModel }, Cmd.none
+    | Some Page.Block ->
+        { model with PageModel = BlockPageModel Block.init }, Cmd.map BlockMsg Cmd.none      
 
 
 let init result = 
@@ -55,6 +59,9 @@ let update msg (model : Model): Model*Cmd<Msg> =
       let m, cmd = Sha256.update msg m
       // { model with PageModel = Sha256Model m }, Cmd.none // If we do this then promises are not called propagately
       { model with PageModel = Sha256Model m }, Cmd.map Sha256Msg cmd
+    | BlockMsg msg, BlockPageModel m ->
+      let m, cmd = Block.update msg m
+      { model with PageModel = BlockPageModel m }, Cmd.map BlockMsg cmd        
     | _ -> model, Cmd.none
 
 let safeComponents =
@@ -83,6 +90,7 @@ let viewPage model dispatch =
     match model.PageModel with
     | HomePageModel -> Home.view ()
     | Sha256Model m -> Sha256.view m (Sha256Msg >> dispatch)
+    | BlockPageModel m -> Block.view(m) (BlockMsg >> dispatch)
 
 let view model dispatch =
   div []

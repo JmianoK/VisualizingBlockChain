@@ -20,15 +20,14 @@ let config =
       homeFolder = Some clientPath
       bindings = [ HttpBinding.create HTTP (IPAddress.Parse "0.0.0.0") port ] }
 
-let getInitCounter () : Async<Counter> = async { return 42 }
 
-let init : WebPart = 
-  Filters.path "/api/init" >=>
-  fun ctx ->
-    async {
-      let! counter = getInitCounter()
-      return! Successful.OK (string counter) ctx
-    }
+// let init : WebPart = 
+//   Filters.path "/api/init" >=>
+//   fun ctx ->
+//     async {
+//       let! counter = getInitCounter()
+//       return! Successful.OK (string counter) ctx
+//     }
 
  
 let JSON v =     
@@ -55,15 +54,6 @@ let hashedMessageHexadecimal (message: string) =
     |> Seq.map (fun c -> c.ToString("X2"))
     |> Seq.reduce (+)
 
-type Message = {
-  Value: string;
-  ErrorMsg: string;
-}
-
-type HashedValue = { 
-  HashedValue: string;
-}
-
 let setCORSHeaders =
     setHeader  "Access-Control-Allow-Origin" "*"
     >=> setHeader "Access-Control-Allow-Headers" "content-type"
@@ -89,14 +79,14 @@ let sha256 : WebPart =
             fun context ->
                 context |> (
                     setCORSHeaders
-                    >=> request (getResourceFromReq<Message> >> (fun message -> hashedMessageHexadecimal message.Value) >> (fun hashedValue -> { HashedValue = hashedValue} ) >> JSON))
+                    >=> request (getResourceFromReq<ValueToHash> >> (fun message -> hashedMessageHexadecimal message.Value) >> (fun hashedValue -> { HashedValue = hashedValue} ) >> JSON))
   ]       
 
 
 let webPart =
   choose [
     allow_cors
-    init
+    // init
     path "/" >=> Files.browseFileHome "index.html"
     sha256
     Files.browseHome

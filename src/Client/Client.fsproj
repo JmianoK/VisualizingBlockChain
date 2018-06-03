@@ -5,10 +5,12 @@
   </PropertyGroup>
   <ItemGroup>
     <Compile Include="..\Shared\Shared.fs" />
+    <Compile Include="core/Api.fs" />
     <Compile Include="Pages.fs" />
     <Compile Include="Styles.fs" />
     <Compile Include="pages/Sha256.fs" />
     <Compile Include="pages/Home.fs" />
+    <Compile Include="pages/Block.fs" />
     <Compile Include="components/Menu.fs" />
     <Compile Include="Client.fs" />
   </ItemGroup>
