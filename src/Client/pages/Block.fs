@@ -8,16 +8,6 @@ open Fable.Core.JsInterop
 open Client.Styles
 open Shared
 
-let difficulty = 4
-let maximumNonce = 500000
-
-let rec generatePatternToFind valueToRepeat numberOfTimes =
-    match numberOfTimes with
-    | _ when numberOfTimes <= 0 -> ""
-    | _ -> valueToRepeat + (generatePatternToFind valueToRepeat (numberOfTimes - 1))
-
-
-let pattern = generatePatternToFind "0" difficulty
 
 type Model = {
   Block: string;
@@ -35,19 +25,13 @@ type Msg =
     | GetHashMine of HashValue
     | Error of exn
 
-let (|Prefix|_|) (p:string) (s:string) =
-    if s.StartsWith(p) then
-        Some(s)
-    else
-        None
-
 
 let update (msg: Msg) model : Model*Cmd<Msg> = 
   match msg with
   | TextChanged valueToHash -> 
-    { model with Text = valueToHash }, Api.getHashCmd valueToHash Success Error
-  | NonceChanged value -> 
-    { model with Nonce = value }, Cmd.none
+    { model with Text = valueToHash }, Api.getHashCmd { Value = model.Block + model.Nonce + valueToHash.Value } Success Error
+  | NonceChanged nonceValue -> 
+    { model with Nonce = nonceValue }, Api.getHashCmd { Value = model.Block + nonceValue + model.Text.Value } Success Error
   | Mine isFound ->
     match isFound with
     | true -> model, Cmd.none
@@ -63,16 +47,8 @@ let update (msg: Msg) model : Model*Cmd<Msg> =
   | Error err ->
     { model with ErrorMsg = Some err.Message }, Cmd.none
 
-let getBackgroundColor (model: Model) = 
-    match model.HashValue with
-    | Some value -> 
-        match value.HashedValue with
-        | Prefix pattern _ -> "#4CAF50"
-        | _ -> "#f44336"
-    | None -> ""
-
 let view (model: Model) (dispatch: Msg -> unit) =
-    [ div [ Style [ Background !! (getBackgroundColor model) ] ] 
+    [ div [ Style [ Background !! (getBackgroundColor model.HashValue) ] ] 
     [ 
           div [ centerStyle "Row" ]
             [ span [ ]
