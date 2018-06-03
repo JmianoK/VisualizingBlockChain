@@ -20,7 +20,7 @@ type Model = {
 type Msg =
     | TextChanged of ValueToHash
     | NonceChanged of string
-    | Mine of bool
+    | Mine
     | Success of HashValue
     | GetHashMine of HashValue
     | Error of exn
@@ -32,16 +32,13 @@ let update (msg: Msg) model : Model*Cmd<Msg> =
     { model with Text = valueToHash }, Api.getHashCmd { Value = model.Block + model.Nonce + valueToHash.Value } Success Error
   | NonceChanged nonceValue -> 
     { model with Nonce = nonceValue }, Api.getHashCmd { Value = model.Block + nonceValue + model.Text.Value } Success Error
-  | Mine isFound ->
-    match isFound with
-    | true -> model, Cmd.none
-    | false -> 
-        model, Api.getHashCmd { Value = model.Block + model.Nonce + model.Text.Value } GetHashMine Error
+  | Mine ->
+    model, Api.getHashCmd { Value = model.Block + model.Nonce + model.Text.Value } GetHashMine Error
   | GetHashMine hashedValue -> 
     match hashedValue.HashedValue with
     | Prefix pattern _ -> { model with HashValue = Some { HashedValue = hashedValue.HashedValue } }, Cmd.none
     | _ -> 
-        { model with HashValue = Some { HashedValue = hashedValue.HashedValue }; Nonce = ((model.Nonce |> int) + 1).ToString() }, Cmd.ofMsg(Mine false)
+        { model with HashValue = Some { HashedValue = hashedValue.HashedValue }; Nonce = ((model.Nonce |> int) + 1).ToString() }, Cmd.ofMsg(Mine)
   | Success hashedValue -> 
     { model with HashValue = Some { HashedValue = hashedValue.HashedValue } }, Cmd.none
   | Error err ->
@@ -80,7 +77,7 @@ let view (model: Model) (dispatch: Msg -> unit) =
                       ReadOnly true
                       Style [ Width !!"100%" ] ] ]
           div [ centerStyle "Row" ]
-            [ button [ OnClick (fun _ -> dispatch (Mine false)) ]
+            [ button [ OnClick (fun _ -> dispatch Mine) ]
             [ str "Mine" ] ]              
     ]   ]           
 
