@@ -63,41 +63,50 @@ let update (msg: Msg) model : Model*Cmd<Msg> =
   | Error err ->
     { model with ErrorMsg = Some err.Message }, Cmd.none
 
+let getBackgroundColor (model: Model) = 
+    match model.HashValue with
+    | Some value -> 
+        match value.HashedValue with
+        | Prefix pattern _ -> "#4CAF50"
+        | _ -> "#f44336"
+    | None -> ""
+
 let view (model: Model) (dispatch: Msg -> unit) =
+    [ div [ Style [ Background !! (getBackgroundColor model) ] ] 
     [ 
-      div [ centerStyle "Row" ]
-        [ span [ ]
-            [ str "Block:" ]
-          input [ Value (model.Block.ToString())
-                  ReadOnly true
-                  Style [ Width !!"100%" ] ] ]  
-      div [ centerStyle "Row" ]
-        [ span [ ]
-            [ str "Nonce:" ]
-          input [ Value (model.Nonce.ToString())
-                  OnChange (fun (ev:React.FormEvent) -> dispatch (NonceChanged !!ev.target?value))
-                  Style [ Width !!"100%" ] ] ]              
-      div [ centerStyle "Row" ]
-        [ span [ ]
-            [ str "Data:" ]
-          textarea [ 
-                  Placeholder "Enter text to hash" 
-                  Cols 50.
-                  Rows 20.                                    
-                  Value model.Text.Value
-                  OnChange (fun (ev:React.FormEvent) -> dispatch (TextChanged  { Value = !!ev.target?value }))
-                  Style [ Width !!"100%" ]
-        ] [ ] ] 
-      div [ centerStyle "Row" ]
-        [ span [ ]
-            [ str "Hash:" ]
-          input [ Value (getHashValue model.HashValue)
-                  ReadOnly true
-                  Style [ Width !!"100%" ] ] ]
-      div [ centerStyle "Row" ]
-        [ button [ OnClick (fun _ -> dispatch (Mine false)) ]
-        [ str "Mine" ] ]              
-    ]                 
+          div [ centerStyle "Row" ]
+            [ span [ ]
+                [ str "Block:" ]
+              input [ Value (model.Block.ToString())
+                      ReadOnly true
+                      Style [ Width !!"100%" ] ] ]  
+          div [ centerStyle "Row" ]
+            [ span [ ]
+                [ str "Nonce:" ]
+              input [ Value (model.Nonce.ToString())
+                      OnChange (fun (ev:React.FormEvent) -> dispatch (NonceChanged !!ev.target?value))
+                      Style [ Width !!"100%" ] ] ]              
+          div [ centerStyle "Row" ]
+            [ span [ ]
+                [ str "Data:" ]
+              textarea [ 
+                      Placeholder "Enter text to hash" 
+                      Cols 50.
+                      Rows 20.                                    
+                      Value model.Text.Value
+                      OnChange (fun (ev:React.FormEvent) -> dispatch (TextChanged  { Value = !!ev.target?value }))
+                      Style [ Width !!"100%" ]
+            ] [ ] ] 
+          div [ centerStyle "Row" ]
+            [ span [ ]
+                [ str "Hash:" ]
+              input [ Value (getHashValue model.HashValue)
+                      ReadOnly true
+                      Style [ Width !!"100%" ] ] ]
+          div [ centerStyle "Row" ]
+            [ button [ OnClick (fun _ -> dispatch (Mine false)) ]
+            [ str "Mine" ] ]              
+    ]   ]           
 
 
 let init = {
