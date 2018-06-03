@@ -92,12 +92,12 @@ type MineResponse = {
   Nonce: string;
 }
 
-let rec mineWorker block nonce originalMessage hashedMessage = 
-  match hashedMessage with
-  | Prefix "0000" hashedMessage -> { HashedValue = hashedMessage; Block = block.ToString(); Nonce = nonce.ToString() }
-  | _ ->   
-    let valueToHash = block.ToString() + nonce.ToString() + originalMessage
-    mineWorker block (nonce + 1) originalMessage (hashedMessageHexadecimal valueToHash)
+let rec mineWorker block nonce originalMessage = 
+  let valueToHash = block.ToString() + nonce.ToString() + originalMessage
+  let hashed = (hashedMessageHexadecimal valueToHash)
+  match hashed with
+    | Prefix "0000" hashed -> { HashedValue = hashed; Block = block.ToString(); Nonce = nonce.ToString() }
+    | _ -> mineWorker block (nonce + 1) originalMessage
 
 
 let mine: WebPart =
@@ -107,7 +107,7 @@ let mine: WebPart =
           fun context ->
               context |> 
               (
-                setCORSHeaders >=> JSON (mineWorker 1 0 "hi" "")
+                setCORSHeaders >=> JSON (mineWorker 1 0 "hi")
               ) ]
   ]       
 
