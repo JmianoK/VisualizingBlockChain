@@ -21,6 +21,8 @@ type Msg =
     | TextChanged of ValueToHash
     | NonceChanged of string
     | Mine
+    | GetFasterMine
+    | FasterMineResponse of MineResponse
     | Success of HashValue
     | GetHashMine of HashValue
     | Error of exn
@@ -29,16 +31,21 @@ type Msg =
 let update (msg: Msg) model : Model*Cmd<Msg> = 
   match msg with
   | TextChanged valueToHash -> 
-    { model with Text = valueToHash }, Api.getHashCmd { Value = model.Block + model.Nonce + valueToHash.Value } Success Error
+    { model with Text = valueToHash }, Api.getCmd Api.getHash { Value = model.Block + model.Nonce + valueToHash.Value } Success Error
   | NonceChanged nonceValue -> 
-    { model with Nonce = nonceValue }, Api.getHashCmd { Value = model.Block + nonceValue + model.Text.Value } Success Error
+    { model with Nonce = nonceValue }, Api.getCmd Api.getHash { Value = model.Block + nonceValue + model.Text.Value } Success Error
   | Mine ->
-    model, Api.getHashCmd { Value = model.Block + model.Nonce + model.Text.Value } GetHashMine Error
+    model, Api.getCmd Api.getHash { Value = model.Block + model.Nonce + model.Text.Value } GetHashMine Error
   | GetHashMine hashedValue -> 
     match hashedValue.HashedValue with
     | Prefix pattern _ -> { model with HashValue = Some { HashedValue = hashedValue.HashedValue } }, Cmd.none
     | _ -> 
         { model with HashValue = Some { HashedValue = hashedValue.HashedValue }; Nonce = ((model.Nonce |> int) + 1).ToString() }, Cmd.ofMsg(Mine)
+  | GetFasterMine -> model, Api.getCmd Api.mineNonce model.Text FasterMineResponse Error  
+  | FasterMineResponse mineResponse -> { model 
+                                         with Nonce = mineResponse.Nonce; 
+                                              HashValue = Some { HashedValue = mineResponse.HashedValue } 
+                                       }, Cmd.none
   | Success hashedValue -> 
     { model with HashValue = Some { HashedValue = hashedValue.HashedValue } }, Cmd.none
   | Error err ->
@@ -78,7 +85,10 @@ let view (model: Model) (dispatch: Msg -> unit) =
                       Style [ Width !!"100%" ] ] ]
           div [ centerStyle "Row" ]
             [ button [ OnClick (fun _ -> dispatch Mine) ]
-            [ str "Mine" ] ]              
+                [ str "Mine" ] 
+              button [ OnClick (fun _ -> dispatch GetFasterMine) ]
+                [ str "Faster Mine" ]   
+            ]
     ]   ]           
 
 

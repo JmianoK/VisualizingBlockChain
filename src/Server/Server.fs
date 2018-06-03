@@ -68,29 +68,23 @@ let allow_cors : WebPart =
     ]
 
 let sha256 : WebPart =
-  choose [ 
-    path "/sha256" >=> 
-      GET >=> 
-      request (fun request ->
-          match request.queryParam "message" with
-          | Choice1Of2 message -> 
-                    OK (sprintf "Hashed Message: %s" (hashedMessageHexadecimal message))
-          | Choice2Of2 errorMessage -> BAD_REQUEST errorMessage)
-      POST >=>       
-              fun context ->
-                  context |> 
-                  (setCORSHeaders >=> 
-                    request (getResourceFromReq<ValueToHash> 
-                    >> (fun message -> hashedMessageHexadecimal message.Value) 
-                    >> (fun hashedValue -> { HashedValue = hashedValue} ) 
-                    >> JSON))
-  ]
-
-type MineResponse = {
-  HashedValue: string;
-  Block: string;
-  Nonce: string;
-}
+  path "/sha256" >=> 
+    choose [ 
+        GET >=> 
+        request (fun request ->
+            match request.queryParam "message" with
+            | Choice1Of2 message -> 
+                      OK (sprintf "Hashed Message: %s" (hashedMessageHexadecimal message))
+            | Choice2Of2 errorMessage -> BAD_REQUEST errorMessage)
+        POST >=>       
+                fun context ->
+                    context |> 
+                    (setCORSHeaders >=> 
+                      request (getResourceFromReq<ValueToHash> 
+                      >> (fun message -> hashedMessageHexadecimal message.Value) 
+                      >> (fun hashedValue -> { HashedValue = hashedValue} ) 
+                      >> JSON))
+    ]
 
 let rec mineWorker block nonce originalMessage = 
   let valueToHash = block.ToString() + nonce.ToString() + originalMessage
@@ -102,13 +96,13 @@ let rec mineWorker block nonce originalMessage =
 
 let mine: WebPart =
   choose [
-    GET >=> choose
+    POST >=> choose
      [ path "/mine" >=>
-          fun context ->
-              context |> 
-              (
-                setCORSHeaders >=> JSON (mineWorker 1 0 "hi")
-              ) ]
+          (setCORSHeaders >=> 
+                request(getResourceFromReq<ValueToHash> 
+                >> (fun hashedValue -> (mineWorker 1 0 hashedValue.Value)) 
+                >> JSON))
+     ]
   ]       
 
 

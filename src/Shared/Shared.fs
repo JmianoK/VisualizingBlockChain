@@ -6,6 +6,12 @@ type ValueToHash = {
   Value: string;
 } 
 
+type MineResponse = {
+  HashedValue: string;
+  Block: string;
+  Nonce: string;
+}
+
 let difficulty = 4
 let maximumNonce = 500000
 
