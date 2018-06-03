@@ -18,9 +18,9 @@ let rec generatePatternToFind valueToRepeat numberOfTimes =
 let pattern = generatePatternToFind "0" difficulty
 
 // Active Pattern To the rescue!
-let (|Prefix|_|) (p:string) (s:string) =
-    if s.StartsWith(p) then
-        Some(s)
+let (|Prefix|_|) (startsWith:string) (value:string) =
+    if value.StartsWith(startsWith) then
+        Some(value)
     else
         None
 

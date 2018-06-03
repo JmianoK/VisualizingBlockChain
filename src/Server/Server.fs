@@ -83,10 +83,15 @@ let sha256 : WebPart =
                       >=> request (getResourceFromReq<ValueToHash> >> (fun message -> hashedMessageHexadecimal message.Value) >> (fun hashedValue -> { HashedValue = hashedValue} ) >> JSON))
   ]
 
+let rec mineWorker block nonce message = 
+  match message with
+  | Prefix "0000" message -> message
+  | _ -> mineWorker block (nonce + 1) (hashedMessageHexadecimal message)
+
 let mine: WebPart =
   choose [
     GET >=> choose
-     [ path "/mine" >=> OK (sprintf "Hello World") ]
+     [ path "/mine" >=> OK (mineWorker 1 0 "hi") ]
   ]       
 
 
