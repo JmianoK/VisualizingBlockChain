@@ -29,6 +29,8 @@ let (|Prefix|_|) (startsWith:string) (value:string) =
         Some(value)
     else
         None
+let (|LessThan|_|) k value = if value < k then Some() else None
+let (|MoreThan|_|) k value = if value > k then Some() else None    
 
 let getHashValue (hashValue: HashValue option) = 
     match hashValue with

@@ -86,12 +86,17 @@ let sha256 : WebPart =
                       >> JSON))
     ]
 
+
+// 6 "0"s nonce is 17380171 for empty data with block 1
 let rec mineWorker block nonce originalMessage = 
   let valueToHash = block.ToString() + nonce.ToString() + originalMessage
   let hashed = (hashedMessageHexadecimal valueToHash)
   match hashed with
-    | Prefix "0000" hashed -> { HashedValue = hashed; Block = block.ToString(); Nonce = nonce.ToString() }
-    | _ -> mineWorker block (nonce + 1) originalMessage
+    | Prefix "000000" hashed -> { HashedValue = hashed; Block = block.ToString(); Nonce = nonce.ToString() }
+    | _ -> 
+      match nonce with
+      | LessThan maximumNonce -> mineWorker block (nonce + 1) originalMessage
+      | _ -> { HashedValue = "Stopping mining since it's getting more expensive"; Block = block.ToString(); Nonce = nonce.ToString() }
 
 
 let mine: WebPart =

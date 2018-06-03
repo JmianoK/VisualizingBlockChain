@@ -35,13 +35,13 @@ let update (msg: Msg) model : Model*Cmd<Msg> =
   | NonceChanged nonceValue -> 
     { model with Nonce = nonceValue }, Api.getCmd Api.getHash { Value = model.Block + nonceValue + model.Text.Value } Success Error
   | Mine ->
-    model, Api.getCmd Api.getHash { Value = model.Block + model.Nonce + model.Text.Value } GetHashMine Error
+    { model with HashValue = None }, Api.getCmd Api.getHash { Value = model.Block + model.Nonce + model.Text.Value } GetHashMine Error
   | GetHashMine hashedValue -> 
     match hashedValue.HashedValue with
     | Prefix pattern _ -> { model with HashValue = Some { HashedValue = hashedValue.HashedValue } }, Cmd.none
     | _ -> 
         { model with HashValue = Some { HashedValue = hashedValue.HashedValue }; Nonce = ((model.Nonce |> int) + 1).ToString() }, Cmd.ofMsg(Mine)
-  | GetFasterMine -> model, Api.getCmd Api.mineNonce model.Text FasterMineResponse Error  
+  | GetFasterMine -> { model with HashValue = None }, Api.getCmd Api.mineNonce model.Text FasterMineResponse Error  
   | FasterMineResponse mineResponse -> { model 
                                          with Nonce = mineResponse.Nonce; 
                                               HashValue = Some { HashedValue = mineResponse.HashedValue } 
