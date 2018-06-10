@@ -15,13 +15,13 @@ type MineResponse = {
 let difficulty = 4
 let maximumNonce = 500000
 
-let rec generatePatternToFind valueToRepeat numberOfTimes =
+let rec repeatValue valueToRepeat numberOfTimes =
     match numberOfTimes with
     | _ when numberOfTimes <= 0 -> ""
-    | _ -> valueToRepeat + (generatePatternToFind valueToRepeat (numberOfTimes - 1))
+    | _ -> valueToRepeat + (repeatValue valueToRepeat (numberOfTimes - 1))
 
 
-let pattern = generatePatternToFind "0" difficulty
+let pattern = repeatValue "0" difficulty
 
 // Active Pattern To the rescue!
 let (|Prefix|_|) (startsWith:string) (value:string) =

@@ -67,7 +67,7 @@ let update msg (model : Model): Model*Cmd<Msg> =
       let m, cmd = Block.update msg m
       { model with PageModel = BlockPageModel m }, Cmd.map BlockMsg cmd        
     | BlockchainMsg msg, BlockchainPageModel m ->
-      let m, cmd = Block.update msg m
+      let m, cmd = Blockchain.update msg m
       { model with PageModel = BlockchainPageModel m }, Cmd.map BlockchainMsg cmd     
     | _ -> model, Cmd.none
 

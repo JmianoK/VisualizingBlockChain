@@ -4,11 +4,16 @@ open Fable.Helpers.React
 open Fable.Helpers.React.Props
 open Pages
 open Client.Block
-let view (model) =
-     Block.view model
+open Shared
+open Fable
+
+let view (model) (dispatch: Msg -> unit) =
+    [ 
+        ofList (List.concat [ for _ in 0 .. 5 do yield (Block.view model dispatch) ])
+    ]    
 
 let update (msg: Msg) model = 
-    printfn "pahingi"
+    printfn "test"
     Block.update msg model
 
 let init = {
@@ -17,6 +22,6 @@ let init = {
     Text = { Value = "" }
     ErrorMsg = None
     HashValue = None
-    PreviousHash = None
+    PreviousHash = Some { HashedValue = repeatValue "0" 64 }
     ShowPreviousHash = true
 }  

@@ -53,13 +53,13 @@ let update (msg: Msg) model : Model*Cmd<Msg> =
   | Error err ->
     { model with ErrorMsg = Some err.Message }, Cmd.none
 
-let shouldAddPreviousHash showPreviousHash = 
-  match showPreviousHash with
+let shouldAddPreviousHash model = 
+  match model.ShowPreviousHash with
   | true ->
-              div [ centerStyle "Row" ]
+              div [ centerStyle "Row" ] // I can also do if not show then yield Hidden
                 [ span [ ]
                     [ str "Previous Hash:" ]
-                  input [ 
+                  input [ Value (getHashValue model.PreviousHash)
                           ReadOnly true
                           Style [ Width !!"100%" ] ] ] |> Some
   | false ->  None
@@ -90,7 +90,7 @@ let view (model: Model) (dispatch: Msg -> unit) =
                   OnChange (fun (ev:React.FormEvent) -> dispatch (TextChanged  { Value = !!ev.target?value }))
                   Style [ Width !!"100%" ]
         ] [ ] ] 
-      ( ofOption (shouldAddPreviousHash model.ShowPreviousHash))
+      ( ofOption (shouldAddPreviousHash model))
       div [ centerStyle "Row" ]
         [ span [ ]
             [ str "Hash:" ]
