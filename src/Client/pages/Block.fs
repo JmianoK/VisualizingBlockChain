@@ -15,6 +15,8 @@ type Model = {
   Text: ValueToHash;
   ErrorMsg: string option;
   HashValue: HashValue option;
+  PreviousHash: HashValue option;
+  ShowPreviousHash: bool;
 } 
 
 type Msg =
@@ -51,51 +53,65 @@ let update (msg: Msg) model : Model*Cmd<Msg> =
   | Error err ->
     { model with ErrorMsg = Some err.Message }, Cmd.none
 
+let shouldAddPreviousHash showPreviousHash = 
+  match showPreviousHash with
+  | true ->
+              div [ centerStyle "Row" ]
+                [ span [ ]
+                    [ str "Previous Hash:" ]
+                  input [ 
+                          ReadOnly true
+                          Style [ Width !!"100%" ] ] ] |> Some
+  | false ->  None
+
 let view (model: Model) (dispatch: Msg -> unit) =
     [ div [ Style [ Background !! (getBackgroundColor model.HashValue) ] ] 
     [ 
-          div [ centerStyle "Row" ]
-            [ span [ ]
-                [ str "Block:" ]
-              input [ Value (model.Block.ToString())
-                      ReadOnly true
-                      Style [ Width !!"100%" ] ] ]  
-          div [ centerStyle "Row" ]
-            [ span [ ]
-                [ str "Nonce:" ]
-              input [ Value (model.Nonce.ToString())
-                      OnChange (fun (ev:React.FormEvent) -> dispatch (NonceChanged !!ev.target?value))
-                      Style [ Width !!"100%" ] ] ]              
-          div [ centerStyle "Row" ]
-            [ span [ ]
-                [ str "Data:" ]
-              textarea [ 
-                      Placeholder "Enter text to hash" 
-                      Cols 50.
-                      Rows 20.                                    
-                      Value model.Text.Value
-                      OnChange (fun (ev:React.FormEvent) -> dispatch (TextChanged  { Value = !!ev.target?value }))
-                      Style [ Width !!"100%" ]
-            ] [ ] ] 
-          div [ centerStyle "Row" ]
-            [ span [ ]
-                [ str "Hash:" ]
-              input [ Value (getHashValue model.HashValue)
-                      ReadOnly true
-                      Style [ Width !!"100%" ] ] ]
-          div [ centerStyle "Row" ]
-            [ button [ OnClick (fun _ -> dispatch Mine) ]
-                [ str "Mine" ] 
-              button [ OnClick (fun _ -> dispatch GetFasterMine) ]
-                [ str "Faster Mine" ]   
-            ]
-    ]   ]           
-
-
+      div [ centerStyle "Row" ]
+        [ span [ ]
+            [ str "Block:" ]
+          input [ Value (model.Block.ToString())
+                  ReadOnly true
+                  Style [ Width !!"100%" ] ] ]  
+      div [ centerStyle "Row" ]
+        [ span [ ]
+            [ str "Nonce:" ]
+          input [ Value (model.Nonce.ToString())
+                  OnChange (fun (ev:React.FormEvent) -> dispatch (NonceChanged !!ev.target?value))
+                  Style [ Width !!"100%" ] ] ]              
+      div [ centerStyle "Row" ]
+        [ span [ ]
+            [ str "Data:" ]
+          textarea [ 
+                  Placeholder "Enter text to hash" 
+                  Cols 50.
+                  Rows 20.                                    
+                  Value model.Text.Value
+                  OnChange (fun (ev:React.FormEvent) -> dispatch (TextChanged  { Value = !!ev.target?value }))
+                  Style [ Width !!"100%" ]
+        ] [ ] ] 
+      ( ofOption (shouldAddPreviousHash model.ShowPreviousHash))
+      div [ centerStyle "Row" ]
+        [ span [ ]
+            [ str "Hash:" ]
+          input [ Value (getHashValue model.HashValue)
+                  ReadOnly true
+                  Style [ Width !!"100%" ] ] ]
+      div [ centerStyle "Row" ]
+        [ button [ OnClick (fun _ -> dispatch Mine) ]
+            [ str "Mine" ] 
+          button [ OnClick (fun _ -> dispatch GetFasterMine) ]
+            [ str "Faster Mine" ]   
+        ]
+      ]   
+    ]           
+                  
 let init = {
     Block = "1"
     Nonce = "0"
     Text = { Value = "" }
     ErrorMsg = None
     HashValue = None
+    PreviousHash = None
+    ShowPreviousHash = false
 }  

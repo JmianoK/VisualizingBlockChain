@@ -17,4 +17,6 @@ let init = {
     Text = { Value = "" }
     ErrorMsg = None
     HashValue = None
+    PreviousHash = None
+    ShowPreviousHash = true
 }  
