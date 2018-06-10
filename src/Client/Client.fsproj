@@ -11,6 +11,7 @@
     <Compile Include="pages/Sha256.fs" />
     <Compile Include="pages/Home.fs" />
     <Compile Include="pages/Block.fs" />
+    <Compile Include="pages/Blockchain.fs" />
     <Compile Include="components/Menu.fs" />
     <Compile Include="Client.fs" />
   </ItemGroup>

@@ -16,6 +16,7 @@ type PageModel =
     | HomePageModel
     | Sha256Model of Sha256.Model
     | BlockPageModel of Block.Model
+    | BlockchainPageModel of Block.Model
 
 type Model = 
   { 
@@ -25,6 +26,7 @@ type Model =
 type Msg =
 | Sha256Msg of Sha256.Msg
 | BlockMsg of Block.Msg
+| BlockchainMsg of Block.Msg
 
 
 // The navigation logic of the application given a page identity parsed from the .../#info  / information in the URL.
@@ -38,7 +40,9 @@ let urlUpdate (result:Page option) model =
     | Some Page.Home ->
         { model with PageModel = HomePageModel }, Cmd.none
     | Some Page.Block ->
-        { model with PageModel = BlockPageModel Block.init }, Cmd.map BlockMsg Cmd.none      
+        { model with PageModel = BlockPageModel Block.init }, Cmd.map BlockMsg Cmd.none
+    | Some Page.Blockchain ->
+        { model with PageModel = BlockchainPageModel Blockchain.init }, Cmd.map BlockchainMsg Cmd.none       
 
 
 let init result = 
@@ -62,6 +66,9 @@ let update msg (model : Model): Model*Cmd<Msg> =
     | BlockMsg msg, BlockPageModel m ->
       let m, cmd = Block.update msg m
       { model with PageModel = BlockPageModel m }, Cmd.map BlockMsg cmd        
+    | BlockchainMsg msg, BlockchainPageModel m ->
+      let m, cmd = Block.update msg m
+      { model with PageModel = BlockchainPageModel m }, Cmd.map BlockchainMsg cmd     
     | _ -> model, Cmd.none
 
 let safeComponents =
@@ -90,7 +97,8 @@ let viewPage model dispatch =
     match model.PageModel with
     | HomePageModel -> Home.view ()
     | Sha256Model m -> Sha256.view m (Sha256Msg >> dispatch)
-    | BlockPageModel m -> Block.view(m) (BlockMsg >> dispatch)
+    | BlockPageModel m -> Block.view m (BlockMsg >> dispatch)
+    | BlockchainPageModel m -> Blockchain.view m (BlockchainMsg >> dispatch)
 
 let view model dispatch =
   div []
