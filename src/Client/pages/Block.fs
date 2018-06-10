@@ -21,8 +21,8 @@ type Model = {
 } 
 
 type Msg =
-    | TextChanged of ValueToHash
-    | NonceChanged of string
+    | TextChanged of int * ValueToHash
+    | NonceChanged of int * string
     | Mine
     | GetFasterMine
     | FasterMineResponse of MineResponse
@@ -34,9 +34,9 @@ type Msg =
 let update (msg: Msg) model : Model*Cmd<Msg> = 
   printfn "Block Update: %A" msg
   match msg with
-  | TextChanged valueToHash -> 
+  | TextChanged (_, valueToHash) -> 
     { model with Text = valueToHash }, Api.getCmd Api.getHash { Value = model.Block + model.Nonce + valueToHash.Value } Success Error
-  | NonceChanged nonceValue -> 
+  | NonceChanged (_, nonceValue) -> 
     { model with Nonce = nonceValue }, Api.getCmd Api.getHash { Value = model.Block + nonceValue + model.Text.Value } Success Error
   | Mine ->
     { model with HashValue = None }, Api.getCmd Api.getHash { Value = model.Block + model.Nonce + model.Text.Value } GetHashMine Error
@@ -51,6 +51,7 @@ let update (msg: Msg) model : Model*Cmd<Msg> =
                                               HashValue = Some { HashedValue = mineResponse.HashedValue } 
                                        }, Cmd.none
   | Success hashedValue -> 
+    printfn "SUCCESS IS CALLED"
     { model with HashValue = Some { HashedValue = hashedValue.HashedValue } }, Cmd.none
   | Error err ->
     { model with ErrorMsg = Some err.Message }, Cmd.none
@@ -79,7 +80,7 @@ let view (model: Model) (dispatch: Msg -> unit) =
         [ span [ ]
             [ str "Nonce:" ]
           input [ Value (model.Nonce.ToString())
-                  OnChange (fun (ev:React.FormEvent) -> dispatch (NonceChanged !!ev.target?value))
+                  OnChange (fun (ev:React.FormEvent) -> dispatch (NonceChanged (model.Id, !!ev.target?value)))
                   Style [ Width !!"100%" ] ] ]              
       div [ centerStyle "Row" ]
         [ span [ ]
@@ -89,7 +90,7 @@ let view (model: Model) (dispatch: Msg -> unit) =
                   Cols 50.
                   Rows 20.                                    
                   Value model.Text.Value
-                  OnChange (fun (ev:React.FormEvent) -> dispatch (TextChanged  { Value = !!ev.target?value }))
+                  OnChange (fun (ev:React.FormEvent) -> dispatch (TextChanged  (model.Id, { Value = !!ev.target?value })))
                   Style [ Width !!"100%" ]
         ] [ ] ] 
       ( ofOption (shouldAddPreviousHash model))

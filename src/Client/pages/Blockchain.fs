@@ -2,6 +2,7 @@ module Client.Blockchain
 
 open Fable.Helpers.React
 open Fable.Helpers.React.Props
+open Elmish
 open Pages
 open Client.Block
 open Shared
@@ -25,9 +26,19 @@ let view (blockChainModel: Model) (dispatch: Msg -> unit) =
 let update (msg: Msg) (blockChainModel: Model) = 
     printfn "MSG: %A" msg
     printfn "MODEL: %A" blockChainModel.ItemSource
-
-    blockChainModel.ItemSource
-    |> List.map (fun model -> Block.update msg model)    
+    match msg with
+    | NonceChanged (index, _)
+    | TextChanged (index, _) -> 
+        printfn "INDEX IS %A" index
+        blockChainModel.ItemSource
+        |> List.map(fun item -> 
+                        if item.Id = index then
+                            Block.update msg item
+                        else
+                            (item, Cmd.none))
+    | _ ->    
+        blockChainModel.ItemSource
+        |> List.map (fun model -> Block.update msg model)    
 
 
 let init = {
