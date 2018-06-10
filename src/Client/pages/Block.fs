@@ -10,6 +10,7 @@ open Shared
 
 
 type Model = {
+  Id: int;
   Block: string;
   Nonce: string;
   Text: ValueToHash;
@@ -31,6 +32,7 @@ type Msg =
 
 
 let update (msg: Msg) model : Model*Cmd<Msg> = 
+  printfn "Block Update: %A" msg
   match msg with
   | TextChanged valueToHash -> 
     { model with Text = valueToHash }, Api.getCmd Api.getHash { Value = model.Block + model.Nonce + valueToHash.Value } Success Error
@@ -107,6 +109,7 @@ let view (model: Model) (dispatch: Msg -> unit) =
     ]           
                   
 let init = {
+    Id = 0
     Block = "1"
     Nonce = "0"
     Text = { Value = "" }

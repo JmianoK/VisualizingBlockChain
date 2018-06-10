@@ -16,7 +16,7 @@ type PageModel =
     | HomePageModel
     | Sha256Model of Sha256.Model
     | BlockPageModel of Block.Model
-    | BlockchainPageModel of Block.Model
+    | BlockchainPageModel of Blockchain.Model
 
 type Model = 
   { 
@@ -67,8 +67,12 @@ let update msg (model : Model): Model*Cmd<Msg> =
       let m, cmd = Block.update msg m
       { model with PageModel = BlockPageModel m }, Cmd.map BlockMsg cmd        
     | BlockchainMsg msg, BlockchainPageModel m ->
-      let m, cmd = Blockchain.update msg m
-      { model with PageModel = BlockchainPageModel m }, Cmd.map BlockchainMsg cmd     
+      let blockChainUpdate = Blockchain.update msg m
+      let itemSource = blockChainUpdate |> List.map (fst)
+      printfn "===="
+      printfn "%A" blockChainUpdate
+      let cmd = blockChainUpdate |> List.map (snd)
+      { model with PageModel = BlockchainPageModel { ItemSource = itemSource } }, Cmd.map BlockchainMsg cmd.Head
     | _ -> model, Cmd.none
 
 let safeComponents =
