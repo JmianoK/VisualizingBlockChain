@@ -6,6 +6,7 @@ open Elmish
 open Pages
 open Client.Block
 open Shared
+open Styles
 open Fable
 
 type Model = {
@@ -16,29 +17,41 @@ type Model = {
 // | MsgFromChild of int * Block.Msg
 
 let view (blockChainModel: Model) (dispatch: Msg -> unit) =
-    printfn "IM IN BC VIEW"
+    printfn "[Blockchain View]"
     [
-        ofList (
-            blockChainModel.ItemSource
-            |> List.collect (fun model -> Block.view model dispatch))
-    ]    
+        div [ flexRow ]
+            [
+                ofList (
+                    blockChainModel.ItemSource
+                    |> List.collect (fun model -> Block.view model dispatch))
+            ]
+    ]        
 
 let update (msg: Msg) (blockChainModel: Model) = 
-    printfn "MSG: %A" msg
-    printfn "MODEL: %A" blockChainModel.ItemSource
+    printfn "[Blockchain Update]"
     match msg with
-    | NonceChanged (index, _)
-    | TextChanged (index, _) -> 
-        printfn "INDEX IS %A" index
-        blockChainModel.ItemSource
-        |> List.map(fun item -> 
-                        if item.Id = index then
-                            Block.update msg item
-                        else
-                            (item, Cmd.none))
+    | NonceChanged model
+    | TextChanged model -> 
+        let childUpdate = 
+            blockChainModel.ItemSource
+            |> List.map(fun item -> 
+                            if item.Id = model.Id then
+                                Block.update msg item
+                            else
+                                (item, Cmd.none))
+        (childUpdate |> List.map(fun (item, _) -> item), childUpdate |> List.map(fun (_, cmd) -> cmd) |> Cmd.batch)
+    | Success (model, _) ->
+        let childUpdate = 
+            blockChainModel.ItemSource
+            |> List.map(fun item -> 
+                            if item.Id = model.Id then
+                                Block.update msg item
+                            else
+                                (item, Cmd.none))
+        (childUpdate |> List.map(fun (item, _) -> item), childUpdate |> List.map(fun (_, cmd) -> cmd) |> Cmd.batch)
+                                
     | _ ->    
-        blockChainModel.ItemSource
-        |> List.map (fun model -> Block.update msg model)    
+        [],[] 
 
 
 let init = {
@@ -56,6 +69,16 @@ let init = {
         {
             Id = 1
             Block = "1"
+            Nonce = "0"
+            Text = { Value = "" }
+            ErrorMsg = None
+            HashValue = None
+            PreviousHash = Some { HashedValue = repeatValue "0" 64 }
+            ShowPreviousHash = true
+        };
+        {
+            Id = 2
+            Block = "2"
             Nonce = "0"
             Text = { Value = "" }
             ErrorMsg = None

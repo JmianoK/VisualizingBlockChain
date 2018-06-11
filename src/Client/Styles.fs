@@ -29,3 +29,8 @@ let centerStyle direction =
             !!("justifyContent", "center")
             Padding "20px 0"
     ]
+
+let flexRow =
+    Style [ Display "flex"
+            FlexDirection "row"
+    ]

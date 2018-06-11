@@ -58,22 +58,19 @@ let init result =
   // model, cmd
 
 let update msg (model : Model): Model*Cmd<Msg> =
-    match msg, model.PageModel with
-    | Sha256Msg msg, Sha256Model m ->
-      let m, cmd = Sha256.update msg m
-      // { model with PageModel = Sha256Model m }, Cmd.none // If we do this then promises are not called propagately
-      { model with PageModel = Sha256Model m }, Cmd.map Sha256Msg cmd
-    | BlockMsg msg, BlockPageModel m ->
-      let m, cmd = Block.update msg m
-      { model with PageModel = BlockPageModel m }, Cmd.map BlockMsg cmd        
-    | BlockchainMsg msg, BlockchainPageModel m ->
-      let blockChainUpdate = Blockchain.update msg m
-      let itemSource = blockChainUpdate |> List.map (fst)
-      printfn "===="
-      printfn "%A" blockChainUpdate
-      let cmd = blockChainUpdate |> List.map (snd)
-      { model with PageModel = BlockchainPageModel { ItemSource = itemSource } }, Cmd.map BlockchainMsg cmd.Head
-    | _ -> model, Cmd.none
+  printfn "[Client Update]"
+  match msg, model.PageModel with
+  | Sha256Msg msg, Sha256Model m ->
+    let m, cmd = Sha256.update msg m
+    // { model with PageModel = Sha256Model m }, Cmd.none // If we do this then promises are not called propagately
+    { model with PageModel = Sha256Model m }, Cmd.map Sha256Msg cmd
+  | BlockMsg msg, BlockPageModel m ->
+    let m, cmd = Block.update msg m
+    { model with PageModel = BlockPageModel m }, Cmd.map BlockMsg cmd        
+  | BlockchainMsg msg, BlockchainPageModel m ->
+    let m, cmd = Blockchain.update msg m
+    { model with PageModel = BlockchainPageModel { ItemSource = m } }, Cmd.map BlockchainMsg cmd
+  | _ -> model, Cmd.none
 
 let safeComponents =
   let intersperse sep ls =
@@ -105,6 +102,7 @@ let viewPage model dispatch =
     | BlockchainPageModel m -> Blockchain.view m (BlockchainMsg >> dispatch)
 
 let view model dispatch =
+  printfn "[Client View]"
   div []
     [ 
       Menu.view

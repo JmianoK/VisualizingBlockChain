@@ -7,9 +7,9 @@ open Elmish
 open Fable.Core.JsInterop
 open Client.Styles
 open Shared
+open Client
 
-
-type Model = {
+type Block = {
   Id: int;
   Block: string;
   Nonce: string;
@@ -18,26 +18,29 @@ type Model = {
   HashValue: HashValue option;
   PreviousHash: HashValue option;
   ShowPreviousHash: bool;
-} 
+}
+
+type Model = Block
 
 type Msg =
-    | TextChanged of int * ValueToHash
-    | NonceChanged of int * string
+    | TextChanged of Model
+    | NonceChanged of Model
     | Mine
     | GetFasterMine
     | FasterMineResponse of MineResponse
-    | Success of HashValue
+    | Success of Model * HashValue
     | GetHashMine of HashValue
     | Error of exn
 
 
 let update (msg: Msg) model : Model*Cmd<Msg> = 
-  printfn "Block Update: %A" msg
+  printfn "[Block Update]"
   match msg with
-  | TextChanged (_, valueToHash) -> 
-    { model with Text = valueToHash }, Api.getCmd Api.getHash { Value = model.Block + model.Nonce + valueToHash.Value } Success Error
-  | NonceChanged (_, nonceValue) -> 
-    { model with Nonce = nonceValue }, Api.getCmd Api.getHash { Value = model.Block + nonceValue + model.Text.Value } Success Error
+  | TextChanged model -> 
+    printfn "WTF WHY"
+    model, Api.getCmd Api.getHash { Value = model.Block + model.Nonce + model.Text.Value } (fun hashedValue -> Success (model, hashedValue)) Error
+  | NonceChanged model -> 
+    { model with Nonce = model.Nonce }, Api.getCmd Api.getHash { Value = model.Block + model.Nonce + model.Text.Value } (fun hashedValue -> Success (model, hashedValue)) Error
   | Mine ->
     { model with HashValue = None }, Api.getCmd Api.getHash { Value = model.Block + model.Nonce + model.Text.Value } GetHashMine Error
   | GetHashMine hashedValue -> 
@@ -50,7 +53,7 @@ let update (msg: Msg) model : Model*Cmd<Msg> =
                                          with Nonce = mineResponse.Nonce; 
                                               HashValue = Some { HashedValue = mineResponse.HashedValue } 
                                        }, Cmd.none
-  | Success hashedValue -> 
+  | Success (model, hashedValue) -> 
     printfn "SUCCESS IS CALLED"
     { model with HashValue = Some { HashedValue = hashedValue.HashedValue } }, Cmd.none
   | Error err ->
@@ -68,6 +71,7 @@ let shouldAddPreviousHash model =
   | false ->  None
 
 let view (model: Model) (dispatch: Msg -> unit) =
+    printfn "[Block View]"
     [ div [ Style [ Background !! (getBackgroundColor model.HashValue) ] ] 
     [ 
       div [ centerStyle "Row" ]
@@ -80,7 +84,7 @@ let view (model: Model) (dispatch: Msg -> unit) =
         [ span [ ]
             [ str "Nonce:" ]
           input [ Value (model.Nonce.ToString())
-                  OnChange (fun (ev:React.FormEvent) -> dispatch (NonceChanged (model.Id, !!ev.target?value)))
+                  OnChange (fun (ev:React.FormEvent) -> dispatch (NonceChanged { model with Nonce = !!ev.target?value }))
                   Style [ Width !!"100%" ] ] ]              
       div [ centerStyle "Row" ]
         [ span [ ]
@@ -90,7 +94,7 @@ let view (model: Model) (dispatch: Msg -> unit) =
                   Cols 50.
                   Rows 20.                                    
                   Value model.Text.Value
-                  OnChange (fun (ev:React.FormEvent) -> dispatch (TextChanged  (model.Id, { Value = !!ev.target?value })))
+                  OnChange (fun (ev:React.FormEvent) -> dispatch (TextChanged  { model with Text = { Value = !!ev.target?value }}))
                   Style [ Width !!"100%" ]
         ] [ ] ] 
       ( ofOption (shouldAddPreviousHash model))
