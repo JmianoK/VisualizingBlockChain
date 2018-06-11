@@ -40,17 +40,16 @@ let getUpdateFromChild msg blockChainModel blockModel=
 let update (msg: Msg) (blockChainModel: Model) = 
     printfn "[Blockchain Update]"
     match msg with
-    | Mine blockModel
-    | GetFasterMine blockModel
+    | TextChanged blockModel 
     | NonceChanged blockModel
-    | TextChanged blockModel -> 
+    | Mine blockModel
+    | FasterMine blockModel -> 
         getUpdateFromChild msg blockChainModel blockModel
-    | GetFasterMineResponse (blockModel, _)
     | GetHashMine (blockModel, _)
-    | Error (blockModel, _)
-    | GetHashResponse (blockModel, _) ->
+    | GetFasterMineResponse (blockModel, _)
+    | GetHashResponse (blockModel, _)
+    | Error (blockModel, _) ->
         getUpdateFromChild msg blockChainModel blockModel
-
 
 let init = {
     ItemSource = [
