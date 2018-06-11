@@ -27,31 +27,29 @@ let view (blockChainModel: Model) (dispatch: Msg -> unit) =
             ]
     ]        
 
+let getUpdateFromChild msg blockChainModel blockModel= 
+    let childUpdate = 
+        blockChainModel.ItemSource
+        |> List.map(fun item -> 
+                        if item.Id = blockModel.Id then
+                            Block.update msg
+                        else
+                            (item, Cmd.none))
+    (childUpdate |> List.map(fun (item, _) -> item), childUpdate |> List.map(fun (_, cmd) -> cmd) |> Cmd.batch)
+
 let update (msg: Msg) (blockChainModel: Model) = 
     printfn "[Blockchain Update]"
     match msg with
-    | NonceChanged model
-    | TextChanged model -> 
-        let childUpdate = 
-            blockChainModel.ItemSource
-            |> List.map(fun item -> 
-                            if item.Id = model.Id then
-                                Block.update msg item
-                            else
-                                (item, Cmd.none))
-        (childUpdate |> List.map(fun (item, _) -> item), childUpdate |> List.map(fun (_, cmd) -> cmd) |> Cmd.batch)
-    | Success (model, _) ->
-        let childUpdate = 
-            blockChainModel.ItemSource
-            |> List.map(fun item -> 
-                            if item.Id = model.Id then
-                                Block.update msg item
-                            else
-                                (item, Cmd.none))
-        (childUpdate |> List.map(fun (item, _) -> item), childUpdate |> List.map(fun (_, cmd) -> cmd) |> Cmd.batch)
-                                
-    | _ ->    
-        [],[] 
+    | Mine blockModel
+    | GetFasterMine blockModel
+    | NonceChanged blockModel
+    | TextChanged blockModel -> 
+        getUpdateFromChild msg blockChainModel blockModel
+    | GetFasterMineResponse (blockModel, _)
+    | GetHashMine (blockModel, _)
+    | Error (blockModel, _)
+    | GetHashResponse (blockModel, _) ->
+        getUpdateFromChild msg blockChainModel blockModel
 
 
 let init = {

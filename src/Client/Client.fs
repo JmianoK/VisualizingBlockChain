@@ -49,13 +49,6 @@ let init result =
   let model = 
     { PageModel = HomePageModel }
   urlUpdate result model
-  // let cmd =
-  //   Cmd.ofPromise 
-  //     (fetchAs<int> "/api/init") 
-  //     [] 
-  //     (Ok >> Init) 
-  //     (Error >> Init)
-  // model, cmd
 
 let update msg (model : Model): Model*Cmd<Msg> =
   printfn "[Client Update]"
@@ -64,8 +57,8 @@ let update msg (model : Model): Model*Cmd<Msg> =
     let m, cmd = Sha256.update msg m
     // { model with PageModel = Sha256Model m }, Cmd.none // If we do this then promises are not called propagately
     { model with PageModel = Sha256Model m }, Cmd.map Sha256Msg cmd
-  | BlockMsg msg, BlockPageModel m ->
-    let m, cmd = Block.update msg m
+  | BlockMsg msg, BlockPageModel _ ->
+    let m, cmd = Block.update msg
     { model with PageModel = BlockPageModel m }, Cmd.map BlockMsg cmd        
   | BlockchainMsg msg, BlockchainPageModel m ->
     let m, cmd = Blockchain.update msg m

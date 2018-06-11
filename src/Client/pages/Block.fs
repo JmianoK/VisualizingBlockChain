@@ -25,38 +25,35 @@ type Model = Block
 type Msg =
     | TextChanged of Model
     | NonceChanged of Model
-    | Mine
-    | GetFasterMine
-    | FasterMineResponse of MineResponse
-    | Success of Model * HashValue
-    | GetHashMine of HashValue
-    | Error of exn
+    | Mine of Model
+    | GetFasterMine of Model
+    | GetFasterMineResponse of Model * MineResponse
+    | GetHashResponse of Model * HashValue
+    | GetHashMine of Model * HashValue
+    | Error of Model * exn
 
-
-let update (msg: Msg) model : Model*Cmd<Msg> = 
+let update (msg: Msg) = 
   printfn "[Block Update]"
+  let tupleCommandMessage msg updatedModel = (fun hashedValue -> msg (updatedModel, hashedValue))
   match msg with
   | TextChanged model -> 
-    printfn "WTF WHY"
-    model, Api.getCmd Api.getHash { Value = model.Block + model.Nonce + model.Text.Value } (fun hashedValue -> Success (model, hashedValue)) Error
+    model, Api.getCmd Api.getHash { Value = model.Block + model.Nonce + model.Text.Value } (tupleCommandMessage GetHashResponse model) (tupleCommandMessage Error model)
   | NonceChanged model -> 
-    { model with Nonce = model.Nonce }, Api.getCmd Api.getHash { Value = model.Block + model.Nonce + model.Text.Value } (fun hashedValue -> Success (model, hashedValue)) Error
-  | Mine ->
-    { model with HashValue = None }, Api.getCmd Api.getHash { Value = model.Block + model.Nonce + model.Text.Value } GetHashMine Error
-  | GetHashMine hashedValue -> 
+    { model with Nonce = model.Nonce }, Api.getCmd Api.getHash { Value = model.Block + model.Nonce + model.Text.Value } (tupleCommandMessage GetHashResponse model) (tupleCommandMessage Error model)
+  | Mine model ->
+    model, Api.getCmd Api.getHash { Value = model.Block + model.Nonce + model.Text.Value } (tupleCommandMessage GetHashMine model) (tupleCommandMessage Error model)
+  | GetHashMine (model, hashedValue) -> 
     match hashedValue.HashedValue with
-    | Prefix pattern _ -> { model with HashValue = Some { HashedValue = hashedValue.HashedValue } }, Cmd.none
+    | Prefix pattern _ -> { model with HashValue = Some hashedValue }, Cmd.none
     | _ -> 
-        { model with HashValue = Some { HashedValue = hashedValue.HashedValue }; Nonce = ((model.Nonce |> int) + 1).ToString() }, Cmd.ofMsg(Mine)
-  | GetFasterMine -> { model with HashValue = None }, Api.getCmd Api.mineNonce model.Text FasterMineResponse Error  
-  | FasterMineResponse mineResponse -> { model 
-                                         with Nonce = mineResponse.Nonce; 
-                                              HashValue = Some { HashedValue = mineResponse.HashedValue } 
-                                       }, Cmd.none
-  | Success (model, hashedValue) -> 
-    printfn "SUCCESS IS CALLED"
+        let model = { model with HashValue = Some hashedValue; Nonce = ((model.Nonce |> int) + 1).ToString() }
+        model, Cmd.ofMsg(Mine model)
+  | GetFasterMine model -> { model with HashValue = None }, Api.getCmd Api.mineNonce model.Text (tupleCommandMessage GetFasterMineResponse model) (tupleCommandMessage Error model) 
+  | GetFasterMineResponse (model, mineResponse) -> 
+        { model with Nonce = mineResponse.Nonce; HashValue = Some { HashedValue = mineResponse.HashedValue } }, Cmd.none
+  | GetHashResponse (model, hashedValue) -> 
     { model with HashValue = Some { HashedValue = hashedValue.HashedValue } }, Cmd.none
-  | Error err ->
+  | Error (model, err) ->
     { model with ErrorMsg = Some err.Message }, Cmd.none
 
 let shouldAddPreviousHash model = 
@@ -105,9 +102,9 @@ let view (model: Model) (dispatch: Msg -> unit) =
                   ReadOnly true
                   Style [ Width !!"100%" ] ] ]
       div [ centerStyle "Row" ]
-        [ button [ OnClick (fun _ -> dispatch Mine) ]
+        [ button [ OnClick (fun _ -> dispatch (Mine model)) ]
             [ str "Mine" ] 
-          button [ OnClick (fun _ -> dispatch GetFasterMine) ]
+          button [ OnClick (fun _ -> dispatch (GetFasterMine model)) ]
             [ str "Faster Mine" ]   
         ]
       ]   
