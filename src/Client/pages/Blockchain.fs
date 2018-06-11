@@ -59,37 +59,16 @@ let update (msg: Msg) (blockChainModel: Model) =
                                 | None -> (item, Cmd.ofMsg(FasterMine item)))
         (childUpdate |> List.map(fun (item, _) -> item), childUpdate |> List.map(fun (_, cmd) -> cmd) |> Cmd.batch)
 
-let init = {
-        ItemSource = [
-        {
-            Id = 0
-            Block = "0"
-            Nonce = "0"
-            Text = { Value = "" }
-            ErrorMsg = None
-            HashValue = None
-            PreviousHash = Some { HashedValue = repeatValue "0" 64 }
-            ShowPreviousHash = true
-        }; 
-        {
-            Id = 1
-            Block = "1"
-            Nonce = "0"
-            Text = { Value = "" }
-            ErrorMsg = None
-            HashValue = None
-            PreviousHash = Some { HashedValue = repeatValue "0" 64 }
-            ShowPreviousHash = true
-        }; 
-        {
-            Id = 2
-            Block = "2"
-            Nonce = "0"
-            Text = { Value = "" }
-            ErrorMsg = None
-            HashValue = None
-            PreviousHash = Some { HashedValue = repeatValue "0" 64 }
-            ShowPreviousHash = true
-        }
-    ]
-}
+let generateInitialData id =
+ {
+    Id = id
+    Block = id.ToString()
+    Nonce = "0"
+    Text = { Value = "" }
+    ErrorMsg = None
+    HashValue = None
+    PreviousHash = Some { HashedValue = repeatValue "0" 64 }
+    ShowPreviousHash = true
+ }
+
+let init = { ItemSource = [1..3] |> List.map (fun i -> generateInitialData i) }
