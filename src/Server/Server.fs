@@ -19,16 +19,6 @@ let config =
   { defaultConfig with 
       homeFolder = Some clientPath
       bindings = [ HttpBinding.create HTTP (IPAddress.Parse "0.0.0.0") port ] }
-
-
-// let init : WebPart = 
-//   Filters.path "/api/init" >=>
-//   fun ctx ->
-//     async {
-//       let! counter = getInitCounter()
-//       return! Successful.OK (string counter) ctx
-//     }
-
  
 let JSON v =     
     let jsonSerializerSettings = new JsonSerializerSettings()

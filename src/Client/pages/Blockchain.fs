@@ -13,11 +13,7 @@ type Model = {
     ItemSource: List<Block.Model>
 }
 
-// type Msg =
-// | MsgFromChild of int * Block.Msg
-
 let view (blockChainModel: Model) (dispatch: Msg -> unit) =
-    printfn "[Blockchain View]"
     [
         div [ flexRow ]
             [
@@ -38,7 +34,6 @@ let getUpdateFromChild msg blockChainModel blockModel=
     (childUpdate |> List.map(fun (item, _) -> item), childUpdate |> List.map(fun (_, cmd) -> cmd) |> Cmd.batch)
 
 let update (msg: Msg) (blockChainModel: Model) = 
-    printfn "[Blockchain Update]"
     match msg with
     | TextChanged blockModel 
     | NonceChanged blockModel
@@ -46,13 +41,26 @@ let update (msg: Msg) (blockChainModel: Model) =
     | FasterMine blockModel -> 
         getUpdateFromChild msg blockChainModel blockModel
     | GetHashMine (blockModel, _)
-    | GetFasterMineResponse (blockModel, _)
     | GetHashResponse (blockModel, _)
     | Error (blockModel, _) ->
         getUpdateFromChild msg blockChainModel blockModel
+    | GetFasterMineResponse (blockModel, _) ->
+        let childUpdate = 
+            blockChainModel.ItemSource
+            |> List.map(fun item -> 
+                            if item.Id = blockModel.Id then
+                                Block.update msg
+                            else
+                                match item.HashValue with
+                                | Some value ->
+                                    match value.HashedValue with
+                                    | Prefix pattern _ -> (item, Cmd.none)
+                                    | _ -> (item, Cmd.ofMsg(FasterMine item))
+                                | None -> (item, Cmd.ofMsg(FasterMine item)))
+        (childUpdate |> List.map(fun (item, _) -> item), childUpdate |> List.map(fun (_, cmd) -> cmd) |> Cmd.batch)
 
 let init = {
-    ItemSource = [
+        ItemSource = [
         {
             Id = 0
             Block = "0"
@@ -62,7 +70,7 @@ let init = {
             HashValue = None
             PreviousHash = Some { HashedValue = repeatValue "0" 64 }
             ShowPreviousHash = true
-        };
+        }; 
         {
             Id = 1
             Block = "1"
@@ -72,7 +80,7 @@ let init = {
             HashValue = None
             PreviousHash = Some { HashedValue = repeatValue "0" 64 }
             ShowPreviousHash = true
-        };
+        }; 
         {
             Id = 2
             Block = "2"

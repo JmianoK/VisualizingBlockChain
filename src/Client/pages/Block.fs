@@ -45,7 +45,6 @@ let getHashCmd model textToHash successMsg = Api.getCmd Api.getHash textToHash (
 let getMineNonceCmd model = Api.getCmd Api.mineNonce model.Text (tupleCommandMessage GetFasterMineResponse model) (tupleCommandMessage Error model) 
 
 let update (msg: Msg) = 
-  printfn "[Block Update]"
   match msg with
   | TextChanged model ->
     model, getHashCmd model { Value = model.Block + model.Nonce + model.Text.Value } GetHashResponse
@@ -76,7 +75,6 @@ let shouldAddPreviousHash model =
   | false ->  None
 
 let view (model: Model) (dispatch: Msg -> unit) =
-    printfn "[Block View]"
     [ div [ Style [ Background !! (getBackgroundColor model.HashValue) ] ] 
     [ 
       div [ centerStyle "Row" ]

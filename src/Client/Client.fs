@@ -51,7 +51,6 @@ let init result =
   urlUpdate result model
 
 let update msg (model : Model): Model*Cmd<Msg> =
-  printfn "[Client Update]"
   match msg, model.PageModel with
   | Sha256Msg msg, Sha256Model m ->
     let m, cmd = Sha256.update msg m
@@ -95,7 +94,6 @@ let viewPage model dispatch =
     | BlockchainPageModel m -> Blockchain.view m (BlockchainMsg >> dispatch)
 
 let view model dispatch =
-  printfn "[Client View]"
   div []
     [ 
       Menu.view

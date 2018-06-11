@@ -40,5 +40,4 @@ let mineNonce (model: ValueToHash) =
 
 
 let getCmd apiToExecute value success error = 
-  printfn "DID U EVEN TRY"
   Cmd.ofPromise apiToExecute value success error
