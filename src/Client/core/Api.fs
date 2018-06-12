@@ -25,6 +25,7 @@ let getHash (model: ValueToHash) =
 
 let mineNonce (model: MineRequest) = 
   promise {
+    printfn "MINING NONCE FOR %A" model.Block
     let body = toJson model
     let props =
       [

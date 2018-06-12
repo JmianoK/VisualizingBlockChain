@@ -108,7 +108,7 @@ open Elmish.HMR
 Program.mkProgram init update view
 |> Program.toNavigable Pages.urlParser urlUpdate
 #if DEBUG
-|> Program.withConsoleTrace
+// |> Program.withConsoleTrace
 |> Program.withHMR
 #endif
 |> Program.withReact "elmish-app"

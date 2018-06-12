@@ -27,7 +27,9 @@ type Msg =
     | NonceChanged of Model
     | Mine of Model
     | FasterMine of Model
+    | SiblingFasterMine of Model
     | GetFasterMineResponse of Model * MineResponse
+    | GetFasterMineSiblingResponse of Model * MineResponse
     | GetHashResponse of Model * HashValue
     | GetHashMine of Model * HashValue
     | UpdatePreviousHash of Model
@@ -45,6 +47,7 @@ let tupleCommandMessage msg updatedModel = (fun hashedValue -> msg (updatedModel
 let getHashCmd model textToHash successMsg = Api.getCmd Api.getHash textToHash (tupleCommandMessage successMsg model) (tupleCommandMessage Error model)
 let getMineNonceCmd model = Api.getCmd Api.mineNonce { Value = model.Text.Value; Block = model.Block } (tupleCommandMessage GetFasterMineResponse model) (tupleCommandMessage Error model) 
 
+let getMineNonceForSiblingsCmd model = Api.getCmd Api.mineNonce { Value = model.Text.Value; Block = model.Block } (tupleCommandMessage GetFasterMineSiblingResponse model) (tupleCommandMessage Error model) 
 let update (msg: Msg) = 
   match msg with
   | TextChanged model ->
@@ -53,10 +56,13 @@ let update (msg: Msg) =
     { model with Nonce = model.Nonce }, getHashCmd model { Value = model.Block + model.Nonce + model.Text.Value } GetHashResponse
   | Mine model ->
     model, getHashCmd model { Value = model.Block + model.Nonce + model.Text.Value } GetHashMine
+  | SiblingFasterMine model ->
+    { model with HashValue = None }, getMineNonceForSiblingsCmd model
   | FasterMine model -> 
     { model with HashValue = None }, getMineNonceCmd model
   | GetHashMine (model, hashedValue) -> 
     hasSolvedProblem model hashedValue
+  | GetFasterMineSiblingResponse (model, mineResponse)  
   | GetFasterMineResponse (model, mineResponse) ->
     { model with Nonce = mineResponse.Nonce; HashValue = Some { HashedValue = mineResponse.HashedValue } }, Cmd.none
   | GetHashResponse (model, hashedValue) -> 

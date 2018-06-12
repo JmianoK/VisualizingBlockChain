@@ -8,6 +8,7 @@ open Client.Block
 open Shared
 open Styles
 open Fable
+open Client
 
 type Model = {
     ItemSource: List<Block.Model>
@@ -37,28 +38,37 @@ let update (msg: Msg) (blockChainModel: Model) =
     match msg with
     | TextChanged blockModel 
     | NonceChanged blockModel
-    | Mine blockModel
-    | UpdatePreviousHash blockModel
+    | SiblingFasterMine blockModel
+    | Mine blockModel ->
+        getUpdateFromChild msg blockChainModel blockModel
     | FasterMine blockModel -> 
+        printfn "Faster mining %A" blockModel.Id
         getUpdateFromChild msg blockChainModel blockModel
     | GetHashMine (blockModel, _)
     | GetHashResponse (blockModel, _)
+    | GetFasterMineSiblingResponse (blockModel, _)
     | Error (blockModel, _) ->
         getUpdateFromChild msg blockChainModel blockModel
+
+    | UpdatePreviousHash blockModel -> printfn "Updating previoushash from %A" blockModel.Id
+                                       getUpdateFromChild msg blockChainModel blockModel
     | GetFasterMineResponse (blockModel, _) ->
         let childUpdate = 
             blockChainModel.ItemSource
             |> List.map(fun item -> 
-                            printfn "Getting mine %A" item.Id
                             if item.Id = blockModel.Id then
                                 Block.update msg
                             else
                                 match item.HashValue with
                                 | Some value ->
                                     match value.HashedValue with
-                                    | Prefix pattern _ -> (item, Cmd.ofMsg(UpdatePreviousHash item))
-                                    | _ -> (item, Cmd.ofMsg(FasterMine item))
-                                | None -> (item, Cmd.ofMsg(FasterMine item)))
+                                    | Prefix pattern _ -> (item,Cmd.none)
+                                    | _ -> (item, Cmd.ofMsg(SiblingFasterMine item))
+                                | None -> (item, Cmd.ofMsg(SiblingFasterMine item)))
+        
+        printfn "[%A]: Mining Response" blockModel.Id
+        let a = childUpdate |> List.map(fun (item,_) -> (item.Id, item.HashValue))
+        printfn "[%A]: %A" blockModel.Id a                            
         (childUpdate |> List.map(fun (item, _) -> item), childUpdate |> List.map(fun (_, cmd) -> cmd) |> Cmd.batch)
 
 let generateInitialData id =
@@ -73,4 +83,4 @@ let generateInitialData id =
     ShowPreviousHash = true
  }
 
-let init = { ItemSource = [1..3] |> List.map (fun i -> generateInitialData i) }
+let init = { ItemSource = [1..100] |> List.map (fun i -> generateInitialData i) }
