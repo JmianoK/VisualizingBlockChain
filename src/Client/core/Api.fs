@@ -23,7 +23,7 @@ let getHash (model: ValueToHash) =
   }
 
 
-let mineNonce (model: ValueToHash) = 
+let mineNonce (model: MineRequest) = 
   promise {
     let body = toJson model
     let props =

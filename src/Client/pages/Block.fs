@@ -30,6 +30,7 @@ type Msg =
     | GetFasterMineResponse of Model * MineResponse
     | GetHashResponse of Model * HashValue
     | GetHashMine of Model * HashValue
+    | UpdatePreviousHash of Model
     | Error of Model * exn
 
 let hasSolvedProblem model (hashedValue: HashValue) = 
@@ -42,7 +43,7 @@ let hasSolvedProblem model (hashedValue: HashValue) =
 let tupleCommandMessage msg updatedModel = (fun hashedValue -> msg (updatedModel, hashedValue))
 
 let getHashCmd model textToHash successMsg = Api.getCmd Api.getHash textToHash (tupleCommandMessage successMsg model) (tupleCommandMessage Error model)
-let getMineNonceCmd model = Api.getCmd Api.mineNonce model.Text (tupleCommandMessage GetFasterMineResponse model) (tupleCommandMessage Error model) 
+let getMineNonceCmd model = Api.getCmd Api.mineNonce { Value = model.Text.Value; Block = model.Block } (tupleCommandMessage GetFasterMineResponse model) (tupleCommandMessage Error model) 
 
 let update (msg: Msg) = 
   match msg with
@@ -62,6 +63,8 @@ let update (msg: Msg) =
     { model with HashValue = Some { HashedValue = hashedValue.HashedValue } }, Cmd.none
   | Error (model, err) -> 
     { model with ErrorMsg = Some err.Message }, Cmd.none
+  | UpdatePreviousHash model ->
+    { model with PreviousHash = model.HashValue }, Cmd.none  
 
 let shouldAddPreviousHash model = 
   match model.ShowPreviousHash with

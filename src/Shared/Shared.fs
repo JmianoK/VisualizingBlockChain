@@ -6,6 +6,11 @@ type ValueToHash = {
   Value: string;
 } 
 
+type MineRequest = {
+    Value: string;
+    Block: string;
+}
+
 type MineResponse = {
   HashedValue: string;
   Block: string;

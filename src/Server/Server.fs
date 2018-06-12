@@ -83,7 +83,7 @@ let rec mineWorker block nonce originalMessage =
   let hashed = (hashedMessageHexadecimal valueToHash)
   match (hashed, nonce) with
     | FoundHash "0000" hashed -> { HashedValue = hashed; Block = block.ToString(); Nonce = nonce.ToString() }
-    | LessThan maximumNonce -> mineWorker block (nonce + 1) originalMessage
+    | LessThan maximumNonce -> mineWorker (block) (nonce + 1) originalMessage
     | _ -> { HashedValue = "Stopped mining since it's getting more expensive"; Block = block.ToString(); Nonce = nonce.ToString() }
 
 
@@ -92,8 +92,8 @@ let mine: WebPart =
     POST >=> choose
      [ path "/mine" >=>
           (setCORSHeaders >=> 
-                request(getResourceFromReq<ValueToHash> 
-                >> (fun hashedValue -> (mineWorker 1 0 hashedValue.Value)) 
+                request(getResourceFromReq<MineRequest> 
+                >> (fun mineRequest -> (mineWorker (mineRequest.Block |> int) 0 mineRequest.Value)) 
                 >> JSON))
      ]
   ]       

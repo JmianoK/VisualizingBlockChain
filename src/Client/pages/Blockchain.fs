@@ -38,6 +38,7 @@ let update (msg: Msg) (blockChainModel: Model) =
     | TextChanged blockModel 
     | NonceChanged blockModel
     | Mine blockModel
+    | UpdatePreviousHash blockModel
     | FasterMine blockModel -> 
         getUpdateFromChild msg blockChainModel blockModel
     | GetHashMine (blockModel, _)
@@ -48,13 +49,14 @@ let update (msg: Msg) (blockChainModel: Model) =
         let childUpdate = 
             blockChainModel.ItemSource
             |> List.map(fun item -> 
+                            printfn "Getting mine %A" item.Id
                             if item.Id = blockModel.Id then
                                 Block.update msg
                             else
                                 match item.HashValue with
                                 | Some value ->
                                     match value.HashedValue with
-                                    | Prefix pattern _ -> (item, Cmd.none)
+                                    | Prefix pattern _ -> (item, Cmd.ofMsg(UpdatePreviousHash item))
                                     | _ -> (item, Cmd.ofMsg(FasterMine item))
                                 | None -> (item, Cmd.ofMsg(FasterMine item)))
         (childUpdate |> List.map(fun (item, _) -> item), childUpdate |> List.map(fun (_, cmd) -> cmd) |> Cmd.batch)
